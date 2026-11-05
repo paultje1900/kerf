@@ -6,6 +6,8 @@ enum Preferences {
     static let hoverOpenDelay = "hoverOpenDelay"
     static let playsSounds = "playsSounds"
     static let didRegisterLoginItem = "didRegisterLoginItem"
+    /// Set at the first launch, which opens Settings → Agents when no agent is connected yet.
+    static let didLaunch = "didLaunch"
     /// On: the open island becomes small again when the pointer leaves it. Off: it stays until
     /// Escape, a click on the notch, or ⌥ Space.
     static let closesOnLeave = "closesOnLeave"

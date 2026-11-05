@@ -31,6 +31,14 @@ final class TimerModule {
         Hub.shared.refresh()
     }
 
+    /// Switched off: every timer goes, without a sound.
+    func cancelAll() {
+        alarms.values.forEach { $0.invalidate() }
+        alarms = [:]
+        timers = []
+        Hub.shared.refresh()
+    }
+
     func pause(_ timer: Running) {
         guard let index = timers.firstIndex(where: { $0.id == timer.id }), timers[index].paused == nil else { return }
         timers[index].paused = max(timers[index].end.timeIntervalSinceNow, 0)
@@ -69,20 +77,25 @@ final class TimerModule {
     }
 }
 
-/// Plugging in and AirPods connecting, the way iPhone shows them.
+/// Plugging in, the way iPhone shows it.
 final class PowerWatcher: NSObject {
     static let shared = PowerWatcher()
     private var source: CFRunLoopSource?
     private var wasOnAC: Bool?
 
     func start() {
+        guard source == nil else { return }
         wasOnAC = Self.onAC
         let context = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
         if let source = IOPSNotificationCreateRunLoopSource(powerChanged, context)?.takeRetainedValue() {
             self.source = source
             CFRunLoopAddSource(CFRunLoopGetMain(), source, .defaultMode)
         }
-        IOBluetoothWatcher.shared.startIfAllowed()
+    }
+
+    func stop() {
+        if let source { CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .defaultMode) }
+        source = nil
     }
 
     nonisolated static var onAC: Bool {

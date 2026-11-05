@@ -2,7 +2,7 @@ import CoreLocation
 import SwiftUI
 
 /// The temperature and rain in the coming hours, from Open-Meteo (no account, no key), for
-/// where the Mac is. Asks for location from the Today page.
+/// where the Mac is. Asks for location when Weather is switched on, or from the Today page.
 @Observable
 final class WeatherModule: NSObject, CLLocationManagerDelegate {
     static let shared = WeatherModule()
@@ -23,6 +23,7 @@ final class WeatherModule: NSObject, CLLocationManagerDelegate {
     var isAllowed: Bool { authorization == .authorizedAlways || authorization == .authorized }
 
     func start() {
+        guard timer == nil else { return }
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyKilometer
         if isAllowed { manager.requestLocation() }
@@ -32,12 +33,19 @@ final class WeatherModule: NSObject, CLLocationManagerDelegate {
         timer?.tolerance = 120
     }
 
+    func stop() {
+        timer?.invalidate()
+        timer = nil
+        location = nil
+        now = nil
+    }
+
     func requestAccess() {
         manager.requestWhenInUseAuthorization()
     }
 
     func refresh() {
-        guard isAllowed else { return }
+        guard isAllowed, Feature.weather.isOn else { return }
         if let location { Task { await fetch(location) } } else { manager.requestLocation() }
     }
 
@@ -52,6 +60,7 @@ final class WeatherModule: NSObject, CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         Task { @MainActor in
+            guard Feature.weather.isOn else { return }
             WeatherModule.shared.location = location
             await WeatherModule.shared.fetch(location)
         }

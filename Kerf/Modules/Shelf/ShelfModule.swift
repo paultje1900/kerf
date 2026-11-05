@@ -30,11 +30,20 @@ final class ShelfModule {
     nonisolated static var folder: URL { KerfPaths.support.appendingPathComponent("Shelf", isDirectory: true) }
 
     func start() {
+        guard timer == nil else { return }
         reload()
         timer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { _ in
             Task { @MainActor in ShelfModule.shared.reload() }
         }
         timer?.tolerance = 300
+    }
+
+    /// Switched off: the notch takes no more drops. What's kept stays in the folder until it's
+    /// switched on again, which clears what's older than a day.
+    func stop() {
+        timer?.invalidate()
+        timer = nil
+        isDropping = false
     }
 
     /// Reads the folder, dropping what is older than a day.

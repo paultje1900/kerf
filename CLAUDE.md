@@ -15,6 +15,7 @@ A Dynamic Island for the MacBook notch, for macOS 26. Open source, installed thr
 - File-system synchronized groups: new files are picked up by themselves.
 - No work in `body`, only animate what you see, measure in Release.
 - No third-party packages without the maintainer's OK (the MediaRemote adapter is approved). No secrets in git.
+- Kerf is the notch for coding agents first. Out of the box only Agents is on; everything else is a `Feature` (`Kerf/App/Features.swift`) switched on in Settings → Features. A new module gets a case there, starts and stops only through it (nothing runs or asks for a permission while it's off), and its page checks `IslandPage.isAvailable`.
 - Kerf has no server of its own and talks to nothing personal: only Open-Meteo for the weather, and the user's own tools (Claude Code, `gh`). Keep it that way.
 - Check UI changes with the lab: `Kerf --lab shot <scene> <file.png>`.
 

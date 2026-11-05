@@ -5,7 +5,6 @@ import ApplicationServices
 /// the level instead. Needs Accessibility; without it macOS keeps its bar.
 final class MediaKeys {
     static let shared = MediaKeys()
-    static let enabledKey = "hud.replacesSystem"
 
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
@@ -14,15 +13,17 @@ final class MediaKeys {
     private var trustWatch: Timer?
     private var trustObserver: NSObjectProtocol?
 
-    /// Starts now if allowed; otherwise asks once and starts the moment macOS says yes.
-    func startWhenTrusted() {
+    /// Starts now if allowed; otherwise asks (once per version at launch, every time it's switched
+    /// on) and starts the moment macOS says yes.
+    func startWhenTrusted(asking: Bool = false) {
         start()
-        guard tap == nil, UserDefaults.standard.object(forKey: Self.enabledKey) as? Bool ?? true else { return }
+        guard tap == nil, Feature.levels.isOn else { return }
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
-        if UserDefaults.standard.string(forKey: "hud.askedForTrust") != version {
+        if asking || UserDefaults.standard.string(forKey: "hud.askedForTrust") != version {
             UserDefaults.standard.set(version, forKey: "hud.askedForTrust")
             SelectionReader.requestTrust()
         }
+        guard trustWatch == nil else { return }
         trustObserver = DistributedNotificationCenter.default().addObserver(forName: Notification.Name("com.apple.accessibility.api"), object: nil, queue: .main) { _ in
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(0.5))
@@ -32,17 +33,21 @@ final class MediaKeys {
         trustWatch = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
             Task { @MainActor in
                 MediaKeys.shared.start()
-                if MediaKeys.shared.isRunning {
-                    MediaKeys.shared.trustWatch?.invalidate()
-                    MediaKeys.shared.trustWatch = nil
-                }
+                if MediaKeys.shared.isRunning { MediaKeys.shared.stopWatchingTrust() }
             }
         }
         trustWatch?.tolerance = 1
     }
 
+    private func stopWatchingTrust() {
+        trustWatch?.invalidate()
+        trustWatch = nil
+        if let trustObserver { DistributedNotificationCenter.default().removeObserver(trustObserver) }
+        trustObserver = nil
+    }
+
     func start() {
-        guard tap == nil, UserDefaults.standard.object(forKey: Self.enabledKey) as? Bool ?? true, AXIsProcessTrusted() else { return }
+        guard tap == nil, Feature.levels.isOn, AXIsProcessTrusted() else { return }
         let mask = CGEventMask(1) << 14 // NX_SYSDEFINED
         guard let tap = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
                                           eventsOfInterest: mask, callback: mediaKeyCallback, userInfo: nil) else { return }
@@ -53,6 +58,7 @@ final class MediaKeys {
     }
 
     func stop() {
+        stopWatchingTrust()
         if let source { CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes) }
         if let tap { CGEvent.tapEnable(tap: tap, enable: false) }
         tap = nil

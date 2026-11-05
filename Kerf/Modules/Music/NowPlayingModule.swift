@@ -43,6 +43,7 @@ final class NowPlayingModule {
     }
 
     func start() {
+        guard Feature.music.isOn else { return }
         if wakeObservers.isEmpty { watchWakes() }
         guard process == nil, let adapter else { return }
         let process = Process()
@@ -82,6 +83,19 @@ final class NowPlayingModule {
         process = nil
     }
 
+    /// Switched off: no adapter, no tap, nothing in the notch.
+    func switchOff() {
+        stop()
+        hideTask?.cancel()
+        artworkCheck?.cancel()
+        state = nil
+        artwork = nil
+        shownArtwork = nil
+        showsCompact = false
+        AudioLevels.shared.stop()
+        Hub.shared.refresh()
+    }
+
     /// After sleep or a lock the stream can stop hearing about changes: start it fresh.
     func restart() {
         stop()
@@ -103,7 +117,7 @@ final class NowPlayingModule {
 
     /// Asks once what plays, for when the music page opens.
     func refreshNow() {
-        guard let adapter, !isPreview else { return }
+        guard let adapter, !isPreview, Feature.music.isOn else { return }
         let asked = Date.now
         Task.detached(priority: .userInitiated) {
             let process = Process()
@@ -135,6 +149,8 @@ final class NowPlayingModule {
     /// since, so an older snapshot can't put back the last track's cover.
     private func receive(_ new: NowPlayingState?, artwork decoded: DecodedArtwork?, asked: Date? = nil) {
         if let asked, let lastUpdate, lastUpdate > asked { return }
+        // A line still underway when Now Playing was switched off.
+        guard Feature.music.isOn else { return }
         failures = 0
         lastUpdate = .now
         let trackChanged = new?.track != state?.track

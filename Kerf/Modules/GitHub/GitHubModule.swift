@@ -81,6 +81,7 @@ final class GitHubModule {
     }
 
     func refresh() async {
+        guard Feature.github.isOn else { return }
         guard Self.executable != nil else {
             problem = String(localized: "Install the GitHub CLI (gh) and sign in.")
             return
@@ -130,9 +131,20 @@ final class GitHubModule {
         }
     }
 
+    /// Switched off: no more `gh`, and no pull requests beside the threads.
+    func stop() {
+        pollTask?.cancel()
+        pollTask = nil
+        login = nil
+        pulls = []
+        attention = GitHub.Attention()
+        Hub.shared.refresh()
+    }
+
     /// Your open PRs and the ones asking you for a review, the ones a thread works on first. A
     /// failed fetch keeps the last list.
     func refreshPulls() async {
+        guard Feature.github.isOn else { return }
         guard let data = await Self.gh(["api", "user", "--jq", ".login"]) else { return }
         let current = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !current.isEmpty else { return }
@@ -144,7 +156,7 @@ final class GitHubModule {
                 .flatMap { try? JSONDecoder().decode(GitHub.Attention.self, from: $0) } ?? GitHub.Attention()
         }
         guard let authored = await Self.searchAll(login: current, reviews: false),
-              let reviews = await Self.searchAll(login: current, reviews: true) else { return }
+              let reviews = await Self.searchAll(login: current, reviews: true), Feature.github.isOn else { return }
         let requested = reviews.filter { review in !authored.contains { $0.id == review.id } }.map { pull in
             var pull = pull
             pull.reviewRequested = true

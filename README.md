@@ -1,20 +1,23 @@
 # Kerf
 
-A Dynamic Island for the MacBook notch, built to look and move like Apple's own island.
+The notch for your coding agents: a Dynamic Island for the MacBook that looks and moves like Apple's own island.
 
 <p>
-  <img src="Design/home.png" width="410" alt="The open island: what plays, and the rest of today">
   <img src="Design/question.png" width="410" alt="Claude Code asks a question in the notch">
+  <img src="Design/home.png" width="410" alt="With music and calendar on: what plays, and the rest of today">
 </p>
 
-- **Music**: whatever plays (Music, Spotify, podcasts) in Apple Music's island card. Scroll over the notch for volume.
-- **Agents**: Claude Code and Codex ask for permission or answers in the notch, in full, wherever they run (Terminal, an editor, T3 Code). Copilot's sessions and questions show too; its approvals stay in Copilot, so its Allow All holds. An orange dot stays until you answer. Opening Kerf shows the pending decision; from the thread list, a waiting thread's Answer pill opens its decision, and half-typed answers stay. With two threads in one repository, each shows its branch. Any other tool can use `kerf notify`.
-- **Ask**: ⌥ Space. A question goes to Claude through your own Claude Code, a few words to Google. ⌥⇧ Space asks about the selected text. Drop files or take a screenshot to ask about them; speak instead of typing.
-- **Offload**: put in a camera card, click Offload, pick the drive and the project. Every file is copied, checked with xxHash64, and skipped if the project already has it.
-- **Shelf**: drop files on the notch; they stay 24 hours. AirDrop, share, show in Finder, and a clipboard history.
-- **Today**: your calendar with a join button for calls, the weather and rain, timers.
+**Agents**, on from the start: Claude Code and Codex ask for permission or answers in the notch, in full, wherever they run (Terminal, an editor, T3 Code). Copilot's sessions and questions show too; its approvals stay in Copilot, so its Allow All holds. An orange dot stays until you answer. Opening Kerf shows the pending decision; from the thread list, a waiting thread's Answer pill opens its decision, and half-typed answers stay. With two threads in one repository, each shows its branch. Any other tool can use `kerf notify`.
+
+Everything else is off until you switch it on in **Settings → Features**. What's off doesn't run and asks for no permission.
+
 - **GitHub**: pull requests, CI, issues and a repo's files, through `gh`. Your PRs and review requests also show under the threads, the ones a thread works on first; a quiet alert in the notch when checks newly fail or a reviewer asks for changes.
-- **Camera** mirror, **volume and brightness** in the notch, AirPods and charging, downloads, DaVinci Resolve renders.
+- **Ask Claude**: ⌥ Space. A question goes to Claude through your own Claude Code, a few words to Google. ⌥⇧ Space asks about the selected text. Drop files or take a screenshot to ask about them; speak instead of typing. Without it, ⌥ Space opens the island.
+- **Now Playing** and **Mixer**: whatever plays (Music, Spotify, podcasts) in Apple Music's island card, and a volume per app. **Volume and brightness** in the notch; scroll over it for volume.
+- **Calendar**, **Weather** and **Timers**: your day with a join button for calls, the weather and rain. With Now Playing and Calendar on, the island opens on an overview of both.
+- **Shelf** and **Clipboard history**: drop files on the notch; they stay 24 hours. AirDrop, share, show in Finder. **Downloads** in your browser.
+- **Camera cards**: put in a card, click Offload, pick the drive and the project. Every file is copied, checked with xxHash64, and skipped if the project already has it.
+- **Camera mirror**, **Charging**, **AirPods** and **DaVinci Resolve** renders.
 
 ## Install
 
@@ -28,15 +31,13 @@ Update with `brew upgrade --cask kerf`. To remove it, first press Disconnect in 
 
 ## First steps
 
-1. **Settings → Agents → Connect** Claude Code, Codex and Copilot. Kerf shows the exact change to their config first and keeps a backup; Copilot gets its own file in `~/.copilot/hooks`. For Codex, type `/hooks` once to trust them.
-2. **Settings → General → Allow Accessibility**: volume and brightness in the notch, and ⌥⇧ Space for selected text.
-3. **Today**: tap the calendar and weather buttons once. Downloads and AirPods are off until you switch them on in Settings → Pages.
-4. **Ask** uses [Claude Code](https://claude.com/claude-code) (`claude`, signed in); **GitHub** uses the [GitHub CLI](https://cli.github.com) (`gh auth login`).
-5. **DaVinci Resolve**: Preferences → General → External scripting using: Local.
+1. **Settings → Agents → Connect** Claude Code, Codex or Copilot. Kerf opens this the first time, and shows the exact change to their config first and keeps a backup; Copilot gets its own file in `~/.copilot/hooks`. For Codex, type `/hooks` once to trust them.
+2. **Settings → Features**: switch on whatever else you want. A feature asks for its permission (calendar, location, Bluetooth, Accessibility) when you switch it on.
+3. **Ask** uses [Claude Code](https://claude.com/claude-code) (`claude`, signed in); **GitHub** uses the [GitHub CLI](https://cli.github.com) (`gh auth login`); **DaVinci Resolve** needs Preferences → General → External scripting using: Local.
 
 ## Privacy
 
-Kerf has no server and no account. Everything stays on your Mac, except:
+Kerf has no server and no account. Everything stays on your Mac, except, once you switch them on:
 
 - the weather: your approximate location goes to [Open-Meteo](https://open-meteo.com);
 - what you ask Claude goes through your own Claude Code, and GitHub through your own `gh`;

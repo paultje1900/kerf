@@ -8,22 +8,47 @@ enum IslandPage: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     /// Pages you place in Settings: in the bar, under "…", or off. Offload comes and goes with a card.
-    static let placeable: [IslandPage] = [.home, .music, .agents, .ask, .shelf, .today, .mixer, .timer, .github, .camera]
+    static let placeable: [IslandPage] = [.home, .agents, .music, .ask, .shelf, .today, .mixer, .timer, .github, .camera]
 
-    var placement: PagePlacement {
-        get {
-            UserDefaults.standard.string(forKey: "page.\(rawValue).placement").flatMap(PagePlacement.init)
-                ?? ([.timer, .github, .camera].contains(self) ? .more : .bar)
+    /// A page shows only while its feature is on. The overview puts music and the day side by
+    /// side, so it needs both; with one of them it would only repeat that page.
+    var isAvailable: Bool {
+        switch self {
+        case .home: Feature.music.isOn && Feature.calendar.isOn
+        case .music: Feature.music.isOn
+        case .agents: Feature.agents.isOn
+        case .ask: Feature.ask.isOn
+        case .shelf: Feature.shelf.isOn || Feature.clipboard.isOn
+        case .offload: Feature.offload.isOn
+        case .today: Feature.calendar.isOn || Feature.weather.isOn
+        case .github: Feature.github.isOn
+        case .camera: Feature.camera.isOn
+        case .timer: Feature.timer.isOn
+        case .mixer: Feature.mixer.isOn
+        case .more: true
         }
-        nonmutating set { UserDefaults.standard.set(newValue.rawValue, forKey: "page.\(rawValue).placement") }
+    }
+
+    /// In the bar unless placed elsewhere: what doesn't fit goes under "…" by itself.
+    var placement: PagePlacement {
+        get { UserDefaults.standard.string(forKey: placementKey).flatMap(PagePlacement.init) ?? .bar }
+        nonmutating set { UserDefaults.standard.set(newValue.rawValue, forKey: placementKey) }
+    }
+
+    var placementKey: String { "page.\(rawValue).placement" }
+
+    /// What the island opens on when nothing asks for attention: the overview, else the threads.
+    static func start(bar: [IslandPage], more: [IslandPage]) -> IslandPage? {
+        [.home, .agents].first { bar.contains($0) || more.contains($0) } ?? bar.first
     }
 
     /// The bar holds four icons on each side of the notch, "…" included; the rest goes under "…".
     static func arrange(offloadActive: Bool) -> (bar: [IslandPage], more: [IslandPage]) {
-        var bar = placeable.filter { $0.placement == .bar }
-        var more = placeable.filter { $0.placement == .more }
+        let pages = placeable.filter(\.isAvailable)
+        var bar = pages.filter { $0.placement == .bar }
+        var more = pages.filter { $0.placement == .more }
         if offloadActive { bar.insert(.offload, at: min(bar.count, 4)) }
-        let room = more.isEmpty ? 8 : 7
+        let room = more.isEmpty && bar.count <= 8 ? 8 : 7
         if bar.count > room {
             more = Array(bar[room...]).filter { $0 != .offload } + more
             bar = Array(bar.prefix(room))
@@ -156,7 +181,7 @@ struct TabBand: View {
     }
 }
 
-/// Today: the date, the weather, and the day's events with their call links.
+/// Today: the date, the weather, and the day's events with their call links, each while it's on.
 struct TodayPage: View {
     private let calendar = CalendarModule.shared
 
@@ -173,12 +198,12 @@ struct TodayPage: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    weather
+                    if Feature.weather.isOn { weather }
                     Text(context.date, format: .dateTime.hour().minute()).font(.page(15, weight: .medium).monospacedDigit())
                         .foregroundStyle(.white.opacity(0.6))
                 }
             }
-            agenda
+            if Feature.calendar.isOn { agenda }
         }
         .foregroundStyle(.white)
         .padding(.horizontal, ui(20))
@@ -187,7 +212,7 @@ struct TodayPage: View {
     }
 
     static var contentHeight: CGFloat {
-        44 + CGFloat(max(CalendarModule.shared.events.count, 1)) * 46
+        44 + (Feature.calendar.isOn ? CGFloat(max(CalendarModule.shared.events.count, 1)) * 46 : 0)
     }
 
     @ViewBuilder private var weather: some View {

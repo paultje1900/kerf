@@ -81,7 +81,7 @@ final class IslandController {
     func apply(_ hub: Hub) {
         if island.pages != hub.pages { island.pages = hub.pages }
         let available = hub.pages + hub.morePages
-        if !available.contains(island.page), let first = hub.pages.first { island.select(first) }
+        if !available.contains(island.page), let start = hub.startPage { island.select(start) }
         island.show(hub.presentation, waiting: hub.waitingCount)
         // The open page may need another height now.
         island.refit()
@@ -90,12 +90,13 @@ final class IslandController {
     func open(page: IslandPage? = nil, keyboard: Bool = false, pinned: Bool = false) {
         hoverTask?.cancel()
         hoverTask = nil
+        // A waiting agent or a thread's notice comes first; otherwise the overview (or, without it,
+        // the threads), every time. Every page off and nothing waiting: nothing to open on.
+        guard let target = page ?? Hub.shared.attentionPage ?? Hub.shared.startPage else { return }
         // Only the keyboard keeps it open after the pointer leaves: you are typing in it.
         self.pinned = self.pinned || keyboard
         if island.mode != .expanded { AgentCenter.shared.navigation.openOldest() }
-        // A waiting agent or a thread's notice comes first; otherwise the overview, every time.
-        let overview: IslandPage? = island.pages.contains(.home) || Hub.shared.morePages.contains(.home) ? .home : nil
-        if let page = page ?? Hub.shared.attentionPage ?? overview { island.select(page) }
+        island.select(target)
         island.go(.expanded)
         panel.ignoresMouseEvents = false
         if keyboard {
@@ -142,7 +143,7 @@ final class IslandController {
         }) { monitors.append(escape) }
         // Scrolling over the island changes the volume.
         if let scroll = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel, handler: { [weak self] event in
-            guard let self, event.window === panel, island.mode != .expanded else { return event }
+            guard let self, event.window === panel, island.mode != .expanded, Feature.levels.isOn else { return event }
             let direction = event.isDirectionInvertedFromDevice ? -1.0 : 1.0
             let step = event.hasPreciseScrollingDeltas ? 0.004 : 0.04
             let level = min(max(SystemVolume.level + event.scrollingDeltaY * direction * step, 0), 1)
@@ -186,7 +187,7 @@ final class IslandController {
             island.setHovered(true)
             guard hoverTask == nil else { return }
             // Dragging files to the notch opens it almost at once, on the drop places.
-            let dragging = NSEvent.pressedMouseButtons & 1 != 0 && Self.dragHasFiles
+            let dragging = Feature.shelf.isOn && NSEvent.pressedMouseButtons & 1 != 0 && Self.dragHasFiles
             let delay = dragging ? 0.15 : UserDefaults.standard.double(forKey: Preferences.hoverOpenDelay)
             hoverTask = Task {
                 try? await Task.sleep(for: .seconds(delay))

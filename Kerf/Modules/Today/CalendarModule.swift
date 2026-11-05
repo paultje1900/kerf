@@ -34,13 +34,20 @@ final class CalendarModule {
     }
 
     func start() {
+        guard observer == nil else { return }
         observer = NotificationCenter.default.addObserver(forName: .EKEventStoreChanged, object: store, queue: .main) { _ in
             MainActor.assumeIsolated { CalendarModule.shared.refresh() }
         }
         refresh()
     }
 
-    /// Asked from the Today page, when you tap the button.
+    func stop() {
+        if let observer { NotificationCenter.default.removeObserver(observer) }
+        observer = nil
+        events = []
+    }
+
+    /// Asked when Calendar is switched on, or from the Today page.
     func requestAccess() {
         store.requestFullAccessToEvents { _, _ in
             Task { @MainActor in
@@ -52,7 +59,7 @@ final class CalendarModule {
 
     /// Also when the Today page opens, so a new day starts with its own list.
     func refresh() {
-        guard !isPreview else { return }
+        guard !isPreview, Feature.calendar.isOn else { return }
         access = EKEventStore.authorizationStatus(for: .event)
         guard hasAccess else { return }
         let day = Calendar.current.dateInterval(of: .day, for: .now) ?? DateInterval(start: .now, duration: 86_400)

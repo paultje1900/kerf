@@ -67,12 +67,17 @@ final class AgentCenter {
             questionDrafts = questionDrafts.filter { navigation.ids.contains($0.key) }
         }
     }
+    /// Whether any agent's hooks point at Kerf: read at launch, when the page opens and after
+    /// Settings changes them, never while drawing.
+    private(set) var hasConnectedAgent = true
     var navigation = RequestNavigation()
     var questionDrafts: [UUID: QuestionDraft] = [:]
     @ObservationIgnored private var contextTask: Task<Void, Never>?
     @ObservationIgnored private var isPreview = false
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Kerf", category: "Agents")
     @ObservationIgnored private var server: UnixSocketServer?
+    @ObservationIgnored private var frontObserver: NSObjectProtocol?
+    @ObservationIgnored private var scanTask: Task<Void, Never>?
 
     static let showsDoneKey = "agents.showsDone"
     static let soundsDoneKey = "agents.soundsDone"
@@ -80,7 +85,15 @@ final class AgentCenter {
     static let asksInFrontAppKey = "agents.asksInFrontApp"
     static var asksInFrontApp: Bool { UserDefaults.standard.object(forKey: asksInFrontAppKey) as? Bool ?? true }
 
+    func checkConnections() {
+        guard !isPreview else { return }
+        let connected = HookTarget.allCases.contains(where: \.isInstalled)
+        if connected != hasConnectedAgent { hasConnectedAgent = connected }
+    }
+
     func start() {
+        guard server == nil else { return }
+        checkConnections()
         let files = FileManager.default
         try? files.createDirectory(at: KerfPaths.commandLink.deletingLastPathComponent(), withIntermediateDirectories: true)
         // Hooks call a stable path; point it at this copy of the app.
@@ -92,14 +105,16 @@ final class AgentCenter {
             Task { @MainActor in AgentCenter.shared.receive(line, connection) }
         }
         // Going to a thread's app takes its questions along: they show there instead.
-        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { note in
+        frontObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil,
+                                                                          queue: .main) { note in
             let path = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleURL?.path
             Task { @MainActor in AgentCenter.shared.cameForward(path) }
         }
         findRunning()
-        Task {
-            while true {
+        scanTask = Task {
+            while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(60))
+                guard !Task.isCancelled else { return }
                 AgentCenter.shared.findRunning()
             }
         }
@@ -109,7 +124,7 @@ final class AgentCenter {
     /// At launch and when the AI page opens; hooks tell the rest.
     /// Also once a minute, to let go of threads whose window was closed without a SessionEnd.
     func findRunning() {
-        guard !isPreview else { return }
+        guard !isPreview, Feature.agents.isOn else { return }
         Task.detached(priority: .utility) {
             let found = RunningThreads.claudeCode()
             let terminals = RunningThreads.liveTerminals()
@@ -167,6 +182,8 @@ final class AgentCenter {
     }
 
     private func merge(_ found: [RunningThreads.Found], terminals: Set<String>) {
+        // A look that started just before the agents were switched off.
+        guard Feature.agents.isOn else { return }
         var next = sessions
         // Its terminal tab or its app is gone: so is the thread, whatever it last said.
         let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleURL?.path })
@@ -197,9 +214,28 @@ final class AgentCenter {
         Hub.shared.refresh()
     }
 
+    /// Lab only: a fresh install, no agent connected yet.
+    func previewUnconnected() {
+        isPreview = true
+        hasConnectedAgent = false
+        sessions = []
+    }
+
     func stop() {
         server?.stop()
         server = nil
+    }
+
+    /// Switched off: what waits goes back to its tool, which asks as it always does.
+    func switchOff() {
+        stop()
+        scanTask?.cancel()
+        scanTask = nil
+        if let frontObserver { NSWorkspace.shared.notificationCenter.removeObserver(frontObserver) }
+        frontObserver = nil
+        for request in requests { answer(request, AgentReply(decision: .passThrough)) }
+        sessions = []
+        Hub.shared.refresh()
     }
 
     private func receive(_ line: Data, _ connection: UnixSocketServer.Connection) {

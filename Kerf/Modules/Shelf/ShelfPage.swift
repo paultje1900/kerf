@@ -1,8 +1,8 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The shelf: files to drag out again, AirDrop, share, show in Finder. During a drag, three
-/// places to drop: keep, AirDrop, ask Claude.
+/// The shelf: files to drag out again, AirDrop, share, show in Finder, and the clipboard history,
+/// each while it's on. During a drag, the places to drop: keep, AirDrop, and ask Claude.
 struct ShelfPage: View {
     @Bindable private var shelf = ShelfModule.shared
 
@@ -10,14 +10,17 @@ struct ShelfPage: View {
         if shelf.isDropping {
             DropZones().foregroundStyle(.white)
         } else {
+            let clipboard = Feature.clipboard.isOn && (shelf.showsClipboard || !Feature.shelf.isOn)
             VStack(alignment: .leading, spacing: ui(8)) {
-                HStack(spacing: ui(6)) {
-                    segment("Clipboard", on: shelf.showsClipboard) { shelf.showsClipboard = true }
-                    segment("Files", on: !shelf.showsClipboard) { shelf.showsClipboard = false }
-                    Spacer()
+                if Feature.clipboard.isOn, Feature.shelf.isOn {
+                    HStack(spacing: ui(6)) {
+                        segment("Clipboard", on: shelf.showsClipboard) { shelf.showsClipboard = true }
+                        segment("Files", on: !shelf.showsClipboard) { shelf.showsClipboard = false }
+                        Spacer()
+                    }
+                    .padding(.horizontal, ui(20))
                 }
-                .padding(.horizontal, ui(20))
-                if shelf.showsClipboard {
+                if clipboard {
                     ClipboardList().padding(.horizontal, ui(20))
                 } else {
                     files
@@ -75,7 +78,7 @@ struct ShelfPage: View {
     static var contentHeight: CGFloat {
         let shelf = ShelfModule.shared
         if shelf.isDropping { return 120 }
-        if shelf.showsClipboard {
+        if Feature.clipboard.isOn, shelf.showsClipboard || !Feature.shelf.isOn {
             return 52 + CGFloat(min(max(ClipboardModule.shared.clips.count, 1), 5)) * 34
         }
         return shelf.items.isEmpty ? 130 : 168
@@ -117,9 +120,11 @@ struct DropZones: View {
         HStack(spacing: ui(10)) {
             zone(symbol: "tray.and.arrow.down.fill", title: "Keep") { ShelfModule.shared.add($0) }
             zone(symbol: "dot.radiowaves.left.and.right", title: "AirDrop") { ShelfModule.shared.airDrop($0) }
-            zone(symbol: "sparkle", title: "Ask Claude") { urls in
-                AskModule.shared.attach(urls)
-                IslandManager.current?.showAsk()
+            if Feature.ask.isOn {
+                zone(symbol: "sparkle", title: "Ask Claude") { urls in
+                    AskModule.shared.attach(urls)
+                    IslandManager.current?.showAsk()
+                }
             }
         }
         .padding(.horizontal, ui(20))

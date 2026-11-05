@@ -3,18 +3,22 @@ import IOBluetooth
 import SwiftUI
 
 /// AirPods and other headphones connecting, with their battery when the Mac knows it.
-/// Only once Bluetooth is allowed in Settings.
+/// Only once AirPods is switched on and Bluetooth allowed.
 final class IOBluetoothWatcher: NSObject {
     static let shared = IOBluetoothWatcher()
-    static let enabledKey = "extras.airpods"
     private var notification: IOBluetoothUserNotification?
     private var askingManager: CBCentralManager?
 
     var isAllowed: Bool { CBCentralManager.authorization == .allowedAlways }
 
     func startIfAllowed() {
-        guard isAllowed, notification == nil, UserDefaults.standard.object(forKey: Self.enabledKey) as? Bool ?? true else { return }
+        guard isAllowed, notification == nil, Feature.airpods.isOn else { return }
         notification = IOBluetoothDevice.register(forConnectNotifications: self, selector: #selector(connected(_:device:)))
+    }
+
+    func stop() {
+        notification?.unregister()
+        notification = nil
     }
 
     /// Shows the system question; starts once allowed.

@@ -52,6 +52,7 @@ final class AppMixer {
     /// Every open app that uses sound, playing or not. Helpers count as their app,
     /// so Safari's WebKit and Chrome's helpers show as Safari and Chrome.
     func refresh() {
+        guard Feature.mixer.isOn else { return }
         let own = getpid()
         var grouped: [String: (name: String, icon: NSImage?, processes: [AudioObjectID], playing: Bool)] = [:]
         for process in AudioProcess.all() where process.pid != own {
@@ -116,6 +117,12 @@ final class AppMixer {
 
     func stopAll() {
         rebuildTaps()
+    }
+
+    /// Switched off: every app plays at its own volume again.
+    func switchOff() {
+        stopAll()
+        channels = []
     }
 
     /// Off in the lab, like the level tap.

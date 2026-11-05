@@ -45,9 +45,13 @@ final class IslandManager {
         }
     }
 
+    /// The notch, and the other displays if wanted. Without any notch on screen (a Mac without
+    /// one, or a closed MacBook), the floating island on the main display: agents must reach you.
     private var wantedScreens: [NSScreen] {
         let external = UserDefaults.standard.bool(forKey: Preferences.showOnExternalDisplays)
-        return NSScreen.screens.filter { $0.notchSize != nil || external }
+        let wanted = NSScreen.screens.filter { $0.notchSize != nil || external }
+        if wanted.isEmpty, let main = NSScreen.screens.first { return [main] }
+        return wanted
     }
 
     private func rebuildIfDisplaysChanged() {
@@ -123,9 +127,14 @@ final class IslandManager {
         controllers.values.filter { $0.island.mode == .expanded && $0.island.page == .agents }.forEach { $0.close() }
     }
 
-    /// ⌥ Space opens the ask field; ⌥⇧ Space takes the selected text along.
+    /// ⌥ Space opens the ask field; ⌥⇧ Space takes the selected text along. Without Ask, ⌥ Space
+    /// opens the island and closes it again.
     func openAsk(sendingSelection: Bool) {
         guard let controller = currentController else { return }
+        guard Feature.ask.isOn else {
+            if controller.island.mode == .expanded { controller.close() } else { controller.open(keyboard: true) }
+            return
+        }
         if sendingSelection {
             // Read the selection before the island takes the keyboard.
             guard let text = SelectionReader.selectedText() else { return }

@@ -2,7 +2,6 @@ import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let islands = IslandManager()
-    private var hotKeys: [HotKey] = []
     private var signalSources: [DispatchSourceSignal] = []
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -43,28 +42,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 print("Unknown lab job; see Lab.swift.")
                 exit(1)
             }
+            FeatureSwitches.shared.showsEverything = true
             lab.run()
             return
         }
+        // Before the islands: they show only the pages of what's switched on.
+        let features = FeatureSwitches.shared
         islands.start()
-        NowPlayingModule.shared.start()
-        AgentCenter.shared.start()
-        OffloadModule.shared.start()
-        GitHubModule.shared.start()
-        AskModule.shared.start()
-        ShelfModule.shared.start()
-        MediaKeys.shared.startWhenTrusted()
-        CalendarModule.shared.start()
-        PowerWatcher.shared.start()
-        AppMixer.shared.start()
-        ClipboardModule.shared.start()
-        DownloadsWatcher.shared.start()
-        RenderWatcher.shared.start()
-        WeatherModule.shared.start()
-        hotKeys = [
-            HotKey(keyCode: HotKey.space, modifiers: .option) { [weak self] in self?.islands.openAsk(sendingSelection: false) },
-            HotKey(keyCode: HotKey.space, modifiers: [.option, .shift]) { [weak self] in self?.islands.openAsk(sendingSelection: true) },
-        ]
+        features.startAll()
+        Shortcuts.update()
+        let firstLaunch = !UserDefaults.standard.bool(forKey: Preferences.didLaunch)
+        UserDefaults.standard.set(true, forKey: Preferences.didLaunch)
         LoginItem.registerOnFirstLaunch()
+        // A fresh install has nothing to show until an agent is connected: say where.
+        if firstLaunch, !HookTarget.allCases.contains(where: \.isInstalled) { SettingsOpener.open(tab: .agents) }
     }
 }

@@ -46,7 +46,7 @@ struct AgentSettings: View {
 
             Section("Other tools") {
                 Text("Any tool or script can use the kerf command:")
-                Text(verbatim: "\"\(HookInstaller.commandPath)\" notify --agent Gemini \"Klaar\"")
+                Text(verbatim: "\"\(HookInstaller.commandPath)\" notify --agent Gemini \"Done\"")
                     .font(.system(.callout, design: .monospaced))
                     .textSelection(.enabled)
                 Text(verbatim: "\"\(HookInstaller.commandPath)\" notify --ask --agent Gemini \"Push to main?\"")
@@ -72,6 +72,7 @@ struct AgentSettings: View {
                 do {
                     try change.apply()
                     refresh += 1
+                    AgentCenter.shared.checkConnections()
                 } catch {
                     self.error = error.localizedDescription
                 }

@@ -16,6 +16,7 @@ struct IslandRoot: View {
         .ignoresSafeArea()
         // The island is always dark, whatever the Mac's appearance: white text in its fields.
         .environment(\.colorScheme, .dark)
+        .background(SettingsOpenerHost())
     }
 }
 

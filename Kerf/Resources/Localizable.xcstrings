@@ -21,6 +21,36 @@
         }
       }
     },
+    "A quick look at yourself before a call." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Even kijken hoe je eruitziet voor een call."
+          }
+        }
+      }
+    },
+    "A volume for every app that plays." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een eigen volume voor elke app die speelt."
+          }
+        }
+      }
+    },
+    "Accessibility" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toegankelijkheid"
+          }
+        }
+      }
+    },
     "Answer…" : {
       "localizations" : {
         "nl" : {
@@ -31,12 +61,272 @@
         }
       }
     },
+    "Browser downloads and their progress." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloads in je browser en hoe ver ze zijn."
+          }
+        }
+      }
+    },
+    "Calendar" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agenda"
+          }
+        }
+      }
+    },
+    "Camera cards" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camerakaarten"
+          }
+        }
+      }
+    },
+    "Camera mirror" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cameraspiegel"
+          }
+        }
+      }
+    },
+    "Charging" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladen"
+          }
+        }
+      }
+    },
+    "Claude Code, Codex and Copilot ask for permission and answers in the notch. Connect them under Agents." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code, Codex en Copilot vragen om toestemming en antwoorden in de notch. Koppel ze onder Agents."
+          }
+        }
+      }
+    },
+    "Claude Code, Codex or Copilot, in Settings → Agents." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code, Codex of Copilot, in Instellingen → Agents."
+          }
+        }
+      }
+    },
+    "Clipboard history" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klembordgeschiedenis"
+          }
+        }
+      }
+    },
+    "Coding" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programmeren"
+          }
+        }
+      }
+    },
+    "Coding agents" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code-agents"
+          }
+        }
+      }
+    },
+    "Connect your coding agent" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koppel je code-agent"
+          }
+        }
+      }
+    },
+    "Copy a camera card into a project, every file checked." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer een camerakaart naar een project, elk bestand gecontroleerd."
+          }
+        }
+      }
+    },
+    "Countdowns in the notch." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aftellen in de notch."
+          }
+        }
+      }
+    },
+    "DaVinci Resolve" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DaVinci Resolve"
+          }
+        }
+      }
+    },
+    "Drop files on the notch: they stay 24 hours, ready to drag out, AirDrop or share." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet bestanden op de notch: ze blijven 24 uur, klaar om eruit te slepen, te AirDroppen of te delen."
+          }
+        }
+      }
+    },
+    "Extras" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra's"
+          }
+        }
+      }
+    },
+    "Features" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Functies"
+          }
+        }
+      }
+    },
+    "Headphones and their battery when they connect. Needs Bluetooth." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koptelefoons en hun batterij als ze verbinden. Heeft Bluetooth nodig."
+          }
+        }
+      }
+    },
+    "Kerf is the notch for your coding agents first. Switch on whatever else you want; what's off doesn't run." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kerf is eerst de notch voor je code-agents. Zet aan wat je er verder bij wilt; wat uit staat, draait niet."
+          }
+        }
+      }
+    },
+    "Lets Escape close the island from any app, shows volume and brightness in the notch, and reads the selected text for Ask." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daarmee sluit Escape het eiland vanuit elke app, staan volume en helderheid in de notch en leest Vragen de geselecteerde tekst."
+          }
+        }
+      }
+    },
+    "Music and Sound" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muziek en geluid"
+          }
+        }
+      }
+    },
+    "Place" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaats"
+          }
+        }
+      }
+    },
+    "Pull requests, checks, issues and branches through the GitHub CLI (gh). Your pull requests also show beside the threads." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull requests, checks, issues en branches via de GitHub CLI (gh). Je pull requests staan ook bij de threads."
+          }
+        }
+      }
+    },
+    "Questions from Claude Code, Codex and Copilot show up here." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vragen van Claude Code, Codex en Copilot verschijnen hier."
+          }
+        }
+      }
+    },
+    "Render progress from Resolve. Needs Preferences → General → External scripting using: Local." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendervoortgang uit Resolve. Zet in Resolve Preferences → General → External scripting using op Local."
+          }
+        }
+      }
+    },
     "Review requested" : {
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Review gevraagd"
+          }
+        }
+      }
+    },
+    "Show" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon"
           }
         }
       }
@@ -239,6 +529,116 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Een vraag of toestemming verschijnt dan in Claude, de terminal of de editor zelf, en gaat daarheen als je naar die app gaat. Kerf toont de oranje stip."
+          }
+        }
+      }
+    },
+    "Shown in the notch instead of macOS's own bar; scroll over the notch for volume. Needs Accessibility." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In de notch in plaats van de balk van macOS; scrol over de notch voor het volume. Heeft Toegankelijkheid nodig."
+          }
+        }
+      }
+    },
+    "Switch on more in Features. Overview needs Now Playing and Calendar." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet meer aan bij Functies. Overzicht heeft Speelt nu en Agenda nodig."
+          }
+        }
+      }
+    },
+    "Temperature and rain on Today, from Open-Meteo for your approximate location." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatuur en regen op Vandaag, van Open-Meteo voor je locatie bij benadering."
+          }
+        }
+      }
+    },
+    "The battery level when you plug in." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het batterijniveau als je de lader aansluit."
+          }
+        }
+      }
+    },
+    "Timers" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timers"
+          }
+        }
+      }
+    },
+    "Today's events on Today, with a join button for calls." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De afspraken van vandaag op Vandaag, met een knop om mee te doen aan calls."
+          }
+        }
+      }
+    },
+    "Volume and brightness" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume en helderheid"
+          }
+        }
+      }
+    },
+    "Weather" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weer"
+          }
+        }
+      }
+    },
+    "What you copied, ready to copy again." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat je kopieerde, klaar om opnieuw te kopiëren."
+          }
+        }
+      }
+    },
+    "Whatever plays, with a live waveform in the notch." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat er speelt, met een live golfvorm in de notch."
+          }
+        }
+      }
+    },
+    "Your Day" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je dag"
           }
         }
       }
@@ -1129,16 +1529,6 @@
         }
       }
     },
-    "Needs Accessibility, also used for asking Claude about selected text." : {
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Heeft Toegankelijkheid nodig, ook voor vragen over geselecteerde tekst."
-          }
-        }
-      }
-    },
     "New" : {
       "localizations" : {
         "nl" : {
@@ -1529,16 +1919,6 @@
         }
       }
     },
-    "Questions from Claude Code and Codex show up here." : {
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vragen van Claude Code en Codex verschijnen hier."
-          }
-        }
-      }
-    },
     "Questions from coding agents" : {
       "localizations" : {
         "nl" : {
@@ -1669,42 +2049,12 @@
         }
       }
     },
-    "Show AirPods when they connect" : {
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toon AirPods als ze verbinden"
-          }
-        }
-      }
-    },
-    "Show AirPods when they connect…" : {
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toon AirPods als ze verbinden…"
-          }
-        }
-      }
-    },
     "Show Camera" : {
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toon camera"
-          }
-        }
-      }
-    },
-    "Show downloads in the notch" : {
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toon downloads in de notch"
           }
         }
       }
@@ -1735,16 +2085,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toon het weer"
-          }
-        }
-      }
-    },
-    "Show volume and brightness in the notch" : {
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toon volume en helderheid in de notch"
           }
         }
       }
@@ -2035,6 +2375,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Een bestand schrijven"
+          }
+        }
+      }
+    },
+    "⌥ Space asks Claude through your own Claude Code, ⌥⇧ Space asks about the selected text." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌥ Space vraagt Claude via je eigen Claude Code, ⌥⇧ Space vraagt over de geselecteerde tekst."
           }
         }
       }

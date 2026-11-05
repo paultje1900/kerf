@@ -38,6 +38,7 @@ struct AgentsPage: View {
         }
         // Finished threads stay until you click them or carries on in their chat.
         .onAppear {
+            center.checkConnections()
             center.findRunning()
             github.refreshIfStale()
         }
@@ -54,7 +55,7 @@ struct AgentsPage: View {
         }
         let threads = min(center.visibleThreads.count, 4)
         let pulls = min(GitHubModule.shared.pulls.count, 3)
-        guard threads + pulls > 0 else { return 96 }
+        guard threads + pulls > 0 else { return center.hasConnectedAgent ? 96 : 150 }
         return 22 + (threads > 0 ? 22 + CGFloat(threads) * 46 : 0) + (pulls > 0 ? 22 + CGFloat(pulls) * 38 : 0)
     }
 }
@@ -69,8 +70,20 @@ struct Overview: View {
             VStack(spacing: ui(6)) {
                 Image(systemName: "apple.intelligence").font(.page(22, weight: .semibold))
                     .foregroundStyle(AgentMark.gradient)
-                Text("No threads running").font(.page(14, weight: .medium)).foregroundStyle(.white.opacity(0.6))
-                Text("Questions from Claude Code and Codex show up here.").font(.page(12)).foregroundStyle(.white.opacity(0.4))
+                if AgentCenter.shared.hasConnectedAgent {
+                    Text("No threads running").font(.page(14, weight: .medium)).foregroundStyle(.white.opacity(0.6))
+                    Text("Questions from Claude Code, Codex and Copilot show up here.").font(.page(12)).foregroundStyle(.white.opacity(0.4))
+                } else {
+                    // A fresh install: nothing reaches the notch until an agent is connected.
+                    Text("Connect your coding agent").font(.page(14, weight: .medium)).foregroundStyle(.white.opacity(0.8))
+                    Text("Claude Code, Codex or Copilot, in Settings → Agents.").font(.page(12)).foregroundStyle(.white.opacity(0.5))
+                    IslandButton(title: "Connect…", role: .primary) {
+                        IslandManager.current?.closeAll()
+                        SettingsOpener.open(tab: .agents)
+                    }
+                    .frame(width: ui(150))
+                    .padding(.top, ui(4))
+                }
             }
             .frame(maxWidth: .infinity, minHeight: ui(96))
         } else {

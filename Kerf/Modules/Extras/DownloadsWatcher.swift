@@ -18,11 +18,9 @@ final class DownloadsWatcher {
 
     private var folder: URL { FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads", isDirectory: true) }
 
-    static let enabledKey = "extras.downloads"
-
     /// Off until you switch it on in Settings, which is when macOS asks about the Downloads folder.
     func start() {
-        guard source == nil, UserDefaults.standard.bool(forKey: Self.enabledKey) else { return }
+        guard source == nil, Feature.downloads.isOn else { return }
         let fd = open(folder.path, O_EVTONLY)
         guard fd >= 0 else { return }
         let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: [.write, .rename], queue: .main)
@@ -100,6 +98,7 @@ final class RenderWatcher {
     private static let resolveIDs = ["com.blackmagic-design.DaVinciResolve", "com.blackmagic-design.DaVinciResolveLite"]
 
     func start() {
+        guard observers.isEmpty else { return }
         let center = NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification] {
             observers.append(center.addObserver(forName: name, object: nil, queue: .main) { _ in
@@ -113,6 +112,16 @@ final class RenderWatcher {
         helper?.terminationHandler = nil
         helper?.terminate()
         helper = nil
+    }
+
+    /// Switched off: Resolve is no longer watched.
+    func switchOff() {
+        observers.forEach(NSWorkspace.shared.notificationCenter.removeObserver)
+        observers = []
+        stop()
+        percent = nil
+        jobName = nil
+        Hub.shared.refresh()
     }
 
     private var resolveRuns: Bool {

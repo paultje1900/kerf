@@ -1,15 +1,68 @@
 import SwiftUI
 
+enum SettingsTab: Hashable {
+    case general, agents, features, pages, offload
+}
+
 struct SettingsView: View {
+    @Bindable private var opener = SettingsOpener.shared
+
     var body: some View {
-        TabView {
-            Tab("General", systemImage: "gearshape") { GeneralSettings() }
-            Tab("Agents", systemImage: "sparkles") { AgentSettings() }
-            Tab("Offload", systemImage: "sdcard") { OffloadSettings() }
-            Tab("Pages", systemImage: "square.grid.2x2") { PageSettings() }
+        TabView(selection: $opener.tab) {
+            Tab("General", systemImage: "gearshape", value: SettingsTab.general) { GeneralSettings() }
+            if Feature.agents.isOn {
+                Tab("Agents", systemImage: "sparkles", value: SettingsTab.agents) { AgentSettings() }
+            }
+            Tab("Features", systemImage: "switch.2", value: SettingsTab.features) { FeatureSettings() }
+            Tab("Pages", systemImage: "square.grid.2x2", value: SettingsTab.pages) { PageSettings() }
+            if Feature.offload.isOn {
+                Tab("Offload", systemImage: "sdcard", value: SettingsTab.offload) { OffloadSettings() }
+            }
         }
         .frame(width: 560)
         .scenePadding()
+    }
+}
+
+/// Opens Settings on a tab from anywhere. SwiftUI only opens its Settings window from a view, so
+/// every island hosts a `SettingsOpenerHost` that does it.
+@Observable
+final class SettingsOpener {
+    static let shared = SettingsOpener()
+
+    var tab = SettingsTab.general
+    fileprivate var requests = 0
+    fileprivate var handled = 0
+
+    static func open(tab: SettingsTab) {
+        shared.tab = tab
+        shared.requests += 1
+        // No island on screen to do it (all hidden for full screen): the app menu's Settings item.
+        Task {
+            try? await Task.sleep(for: .seconds(0.5))
+            guard shared.handled < shared.requests else { return }
+            shared.handled = shared.requests
+            NSApp.activate()
+            if let item = NSApp.mainMenu?.items.first?.submenu?.items.first(where: { $0.keyEquivalent == "," }), let action = item.action {
+                NSApp.sendAction(action, to: item.target, from: item)
+            }
+        }
+    }
+}
+
+struct SettingsOpenerHost: View {
+    @Environment(\.openSettings) private var openSettings
+    private let opener = SettingsOpener.shared
+
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0)
+            .task(id: opener.requests) {
+                // One island opens it, however many there are.
+                guard opener.requests > opener.handled else { return }
+                opener.handled = opener.requests
+                NSApp.activate()
+                openSettings()
+            }
     }
 }
 
@@ -40,99 +93,124 @@ struct GeneralSettings: View {
                 .fixedSize()
             }
             Toggle("Play sounds", isOn: $playsSounds)
-            HUDSetting()
+            AccessibilitySetting()
             LabeledContent("Open the island", value: "⌥ Space")
-            LabeledContent("Ask Claude about the selection", value: "⌥⇧ Space")
+            if Feature.ask.isOn {
+                LabeledContent("Ask Claude about the selection", value: "⌥⇧ Space")
+            }
         }
         .formStyle(.grouped)
     }
 }
 
-/// Volume and brightness in the notch instead of macOS's own bar. Needs Accessibility.
-struct HUDSetting: View {
-    @AppStorage(MediaKeys.enabledKey) private var replaces = true
+/// Escape from any app, volume and brightness in the notch, and the selected text for Ask.
+struct AccessibilitySetting: View {
     @State private var trusted = SelectionReader.isTrusted
 
     var body: some View {
-        Toggle(isOn: $replaces) {
-            Text("Show volume and brightness in the notch")
-            if !trusted {
-                Text("Needs Accessibility, also used for asking Claude about selected text.")
-            }
-        }
-        .onChange(of: replaces) { _, on in
-            if on { MediaKeys.shared.start() } else { MediaKeys.shared.stop() }
-        }
         if !trusted {
-            Button("Allow Accessibility…") {
-                SelectionReader.requestTrust()
-                Task {
-                    // Picked up once the switch in System Settings is on.
-                    for _ in 0..<60 {
-                        try? await Task.sleep(for: .seconds(2))
-                        if SelectionReader.isTrusted {
-                            trusted = true
-                            MediaKeys.shared.start()
-                            return
+            LabeledContent {
+                Button("Allow Accessibility…") {
+                    SelectionReader.requestTrust()
+                    Task {
+                        // Picked up once the switch in System Settings is on.
+                        for _ in 0..<60 {
+                            try? await Task.sleep(for: .seconds(2))
+                            if SelectionReader.isTrusted {
+                                trusted = true
+                                MediaKeys.shared.start()
+                                return
+                            }
                         }
                     }
                 }
+            } label: {
+                Text("Accessibility")
+                Text("Lets Escape close the island from any app, shows volume and brightness in the notch, and reads the selected text for Ask.")
             }
         }
     }
 }
 
-/// Which pages the open island has, and the extras that need a permission first.
-struct PageSettings: View {
-    @State private var bluetooth = IOBluetoothWatcher.shared.isAllowed
+/// Everything Kerf can do, each on its own switch. What's off doesn't run at all.
+struct FeatureSettings: View {
+    var body: some View {
+        Form {
+            ForEach(Feature.Group.allCases) { group in
+                Section {
+                    ForEach(group.features) { FeatureToggle(feature: $0) }
+                } header: {
+                    Text(group.title)
+                } footer: {
+                    if group == .coding {
+                        Text("Kerf is the notch for your coding agents first. Switch on whatever else you want; what's off doesn't run.")
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
 
+struct FeatureToggle: View {
+    let feature: Feature
+
+    var body: some View {
+        Toggle(isOn: Binding(get: { feature.isOn }, set: { feature.set($0) })) {
+            Text(feature.title)
+            Text(feature.summary)
+        }
+    }
+}
+
+/// The pages of what's switched on: each on or off, and in the bar or under "…".
+struct PageSettings: View {
     var body: some View {
         Form {
             Section {
-                ForEach(IslandPage.placeable) { page in
-                    Picker(selection: Binding(
-                        get: { page.placement },
-                        set: {
-                            page.placement = $0
-                            Hub.shared.refresh()
-                        }
-                    )) {
-                        ForEach(PagePlacement.allCases, id: \.self) { Text($0.title).tag($0) }
-                    } label: {
-                        Label { Text(page.title) } icon: { Image(systemName: page.symbol) }
-                    }
-                }
+                ForEach(IslandPage.placeable.filter(\.isAvailable)) { PageRow(page: $0) }
             } header: {
                 Text("Pages")
             } footer: {
                 Text("Four icons fit on each side of the notch. The rest goes under …")
-            }
-            Section("Downloads") {
-                Toggle("Show downloads in the notch", isOn: Binding(
-                    get: { UserDefaults.standard.bool(forKey: DownloadsWatcher.enabledKey) },
-                    set: { on in
-                        UserDefaults.standard.set(on, forKey: DownloadsWatcher.enabledKey)
-                        if on { DownloadsWatcher.shared.start() } else { DownloadsWatcher.shared.stop() }
-                    }
-                ))
-            }
-            Section("AirPods") {
-                if bluetooth {
-                    Toggle("Show AirPods when they connect", isOn: Binding(
-                        get: { UserDefaults.standard.object(forKey: IOBluetoothWatcher.enabledKey) as? Bool ?? true },
-                        set: { UserDefaults.standard.set($0, forKey: IOBluetoothWatcher.enabledKey) }
-                    ))
-                } else {
-                    Button("Show AirPods when they connect…") {
-                        IOBluetoothWatcher.shared.requestAccess()
-                        Task {
-                            try? await Task.sleep(for: .seconds(5))
-                            bluetooth = IOBluetoothWatcher.shared.isAllowed
-                        }
-                    }
-                }
+                Text("Switch on more in Features. Overview needs Now Playing and Calendar.")
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+private struct PageRow: View {
+    let page: IslandPage
+    @AppStorage private var placement: PagePlacement
+
+    init(page: IslandPage) {
+        self.page = page
+        _placement = AppStorage(wrappedValue: .bar, page.placementKey)
+    }
+
+    var body: some View {
+        LabeledContent {
+            HStack(spacing: 12) {
+                if placement != .off {
+                    Picker("Place", selection: Binding(get: { placement }, set: { place($0) })) {
+                        Text(PagePlacement.bar.title).tag(PagePlacement.bar)
+                        Text(PagePlacement.more.title).tag(PagePlacement.more)
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                }
+                Toggle("Show", isOn: Binding(get: { placement != .off }, set: { place($0 ? .bar : .off) }))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+            }
+        } label: {
+            Label { Text(page.title) } icon: { Image(systemName: page.symbol) }
+        }
+    }
+
+    private func place(_ new: PagePlacement) {
+        placement = new
+        Hub.shared.refresh()
     }
 }

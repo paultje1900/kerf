@@ -15,8 +15,11 @@ final class Hub {
     private(set) var morePages: [IslandPage] = IslandPage.arrange(offloadActive: false).more
     /// The page to open on when something asks for attention.
     var attentionPage: IslandPage? {
+        let pullsCall = GitHubModule.shared.attentionCount > 0
         // A waiting agent, or a thread's notice: the AI page lists them, a click opens the chat.
-        if agentWaiting || !AgentCenter.shared.notices.isEmpty || GitHubModule.shared.attentionCount > 0 { return .agents }
+        if agentWaiting || !AgentCenter.shared.notices.isEmpty || (pullsCall && Feature.agents.isOn) { return .agents }
+        // Without the agents, pull requests have their own page.
+        if pullsCall { return .github }
         if OffloadModule.shared.isActive { return .offload }
         // Clicking what the compact island shows opens its page, as tapping a Live Activity does.
         return switch presentation {
@@ -24,6 +27,8 @@ final class Hub {
         default: nil
         }
     }
+    /// The page to open on otherwise.
+    var startPage: IslandPage? { IslandPage.start(bar: pages, more: morePages) }
     /// A short message on top of everything for a few seconds.
     private var banner: CompactPresentation?
     /// Volume or brightness while it changes.

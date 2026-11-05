@@ -51,6 +51,7 @@ final class OffloadModule {
     var isActive: Bool { card != nil || step == .copying || step == .done }
 
     func start() {
+        guard observers.isEmpty else { return }
         let center = NSWorkspace.shared.notificationCenter
         observers.append(center.addObserver(forName: NSWorkspace.didMountNotification, object: nil, queue: .main) { note in
             let url = note.userInfo?[NSWorkspace.volumeURLUserInfoKey] as? URL
@@ -64,6 +65,18 @@ final class OffloadModule {
         for url in FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: [.volumeIsRemovableKey], options: [.skipHiddenVolumes]) ?? [] {
             inspect(url)
         }
+    }
+
+    /// Switched off: cards are no longer looked at. A copy that runs still finishes.
+    func stop() {
+        observers.forEach(NSWorkspace.shared.notificationCenter.removeObserver)
+        observers = []
+        guard step != .copying else { return }
+        card = nil
+        volume = nil
+        step = .card
+        report = nil
+        Hub.shared.refresh()
     }
 
     /// Only removable volumes are looked at; reading them happens off the main thread.

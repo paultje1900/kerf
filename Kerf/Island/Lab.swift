@@ -52,6 +52,27 @@ struct Lab {
     /// Scenes for `shot`: set up an island, then it settles for a second and a half.
     static let scenes: [String: @MainActor (IslandController) -> Void] = [
         "idle": { _ in },
+        // A fresh install: only the agents, none connected yet.
+        "fresh": { controller in
+            FeatureSwitches.shared.preview(only: [.agents])
+            AgentCenter.shared.previewUnconnected()
+            Hub.shared.refresh()
+            controller.open()
+        },
+        // Settings → Features on a fresh install; `settings-` scenes save the Settings window.
+        "settings-fresh": { _ in
+            FeatureSwitches.shared.preview(only: [.agents])
+            SettingsOpener.open(tab: .features)
+        },
+        "settings-general": { _ in SettingsOpener.open(tab: .general) },
+        "settings-pages": { _ in SettingsOpener.open(tab: .pages) },
+        // The agents with GitHub and Ask, nothing else: the bar holds only their pages.
+        "coding": { controller in
+            FeatureSwitches.shared.preview(only: [.agents, .github, .ask])
+            AgentCenter.shared.preview(nil, sessions: sampleSessions)
+            Hub.shared.refresh()
+            controller.open()
+        },
         "banner": { $0.island.show(.banner(.symbol("battery.100percent.bolt", .green), .value("80%")), waiting: 0) },
         "dot": { $0.island.show(nil, waiting: 1) },
         // Three threads blocked on you: the dot with its count.
@@ -565,7 +586,9 @@ struct Lab {
             }
             // Scenes with real data (gh) need longer.
             try? await Task.sleep(for: .seconds(scene.hasPrefix("github") ? 8 : 1.6))
-            if let image = FrameRecorder.snapshot(of: controller.panel) { writePNG(image, to: file) }
+            let window = scene.hasPrefix("settings-")
+                ? NSApp.windows.first { $0 !== controller.panel && $0.isVisible && $0.styleMask.contains(.titled) } : controller.panel
+            if let window, let image = FrameRecorder.snapshot(of: window) { writePNG(image, to: file) }
             Self.quit(0)
         }
     }

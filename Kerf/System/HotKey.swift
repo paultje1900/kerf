@@ -51,3 +51,21 @@ final class HotKey {
         }, 1, &spec, nil, nil)
     }
 }
+
+/// Kerf's shortcuts. ⌥ Space opens the island, on Ask when Ask is on; ⌥⇧ Space asks about the
+/// selected text and is only taken from other apps while Ask is on.
+enum Shortcuts {
+    private static var open: HotKey?
+    private static var selection: HotKey?
+
+    static func update() {
+        if open == nil {
+            open = HotKey(keyCode: HotKey.space, modifiers: .option) { IslandManager.current?.openAsk(sendingSelection: false) }
+        }
+        if !Feature.ask.isOn {
+            selection = nil
+        } else if selection == nil {
+            selection = HotKey(keyCode: HotKey.space, modifiers: [.option, .shift]) { IslandManager.current?.openAsk(sendingSelection: true) }
+        }
+    }
+}
