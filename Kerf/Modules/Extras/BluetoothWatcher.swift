@@ -35,10 +35,12 @@ final class IOBluetoothWatcher: NSObject {
         }
     }
 
-    @objc private func connected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
+    /// IOBluetooth calls this on its own queue, for every device that connects: nonisolated, or Swift traps.
+    @objc nonisolated private func connected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
         guard device.deviceClassMajor == kBluetoothDeviceClassMajorAudio || (device.name ?? "").localizedCaseInsensitiveContains("airpods") else { return }
+        nonisolated(unsafe) let device = device
         // A moment later the battery levels are known.
-        Task {
+        Task { @MainActor in
             try? await Task.sleep(for: .seconds(2))
             let name = device.name ?? "AirPods"
             let percent = Self.battery(of: device)
