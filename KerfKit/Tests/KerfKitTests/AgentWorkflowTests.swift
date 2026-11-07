@@ -167,6 +167,26 @@ struct PullAttentionTests {
         #expect(attention.unread.isEmpty)
     }
 
+    @Test func mergesAreNewsOnceAndOnlyAfterTheFirstLook() throws {
+        var merged = makePull()
+        merged.mergedAt = .now
+        var attention = GitHub.Attention()
+        attention.updateMerged([merged])
+        #expect(attention.unreadMerges.isEmpty)
+        var another = merged
+        another.url += "-2"
+        attention.updateMerged([merged, another])
+        #expect(attention.unreadMerges == [another.id])
+        attention.updateMerged([merged, another])
+        #expect(attention.unreadMerges == [another.id])
+        attention.sawMerges()
+        attention.updateMerged([merged, another])
+        #expect(attention.unreadMerges.isEmpty)
+        // Older saved states, from before merges, still load.
+        let old = Data(#"{"previous":{},"initialized":true,"unread":{}}"#.utf8)
+        #expect(try JSONDecoder().decode(GitHub.Attention.self, from: old).unreadMerges.isEmpty)
+    }
+
     @Test func linkedPRsComeFirstWithoutDroppingOtherAuthoredPRs() {
         var linked = makePull()
         linked.headRefName = "feature"

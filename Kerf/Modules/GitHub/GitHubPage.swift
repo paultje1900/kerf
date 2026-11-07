@@ -23,7 +23,7 @@ struct GitHubPage: View {
                 Text(verbatim: problem).font(.page(13)).foregroundStyle(.white.opacity(0.6)).frame(height: ui(40))
             } else {
                 switch github.tab {
-                case .pulls: items(github.pulls, symbol: "arrow.triangle.pull", empty: "No open pull requests")
+                case .pulls: items(github.openPulls, symbol: "arrow.triangle.pull", empty: "No open pull requests")
                 case .branches: branches
                 case .issues: items(github.issues, symbol: "smallcircle.filled.circle", empty: "No issues for you")
                 case .ci: runs
@@ -40,7 +40,7 @@ struct GitHubPage: View {
     static var contentHeight: CGFloat {
         let github = GitHubModule.shared
         let rows: Int = switch github.tab {
-        case .pulls: github.pulls.count
+        case .pulls: github.openPulls.count
         case .branches: github.graph.count + 1
         case .issues: github.issues.count
         case .ci: github.runs.count

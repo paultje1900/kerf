@@ -261,6 +261,16 @@
         }
       }
     },
+    "Merged" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samengevoegd"
+          }
+        }
+      }
+    },
     "Music and Sound" : {
       "localizations" : {
         "nl" : {

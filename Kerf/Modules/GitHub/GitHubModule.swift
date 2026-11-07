@@ -155,29 +155,31 @@ final class GitHubModule {
             attention = UserDefaults.standard.data(forKey: attentionKey)
                 .flatMap { try? JSONDecoder().decode(GitHub.Attention.self, from: $0) } ?? GitHub.Attention()
         }
+        // Yours merged in the last eight hours stay in the list that long.
         guard let authored = await Self.searchAll(login: current, reviews: false),
-              let reviews = await Self.searchAll(login: current, reviews: true), Feature.github.isOn else { return }
+              let reviews = await Self.searchAll(login: current, reviews: true),
+              let merged = await Self.searchAll(login: current, reviews: false, mergedSince: .now.addingTimeInterval(-8 * 3_600)),
+              Feature.github.isOn else { return }
         let requested = reviews.filter { review in !authored.contains { $0.id == review.id } }.map { pull in
             var pull = pull
             pull.reviewRequested = true
             return pull
         }
-        // Alerts are for your own PRs: a review request shows in the list, it doesn't call.
-        attention.update(authored)
+        pulls = authored + requested + merged
+        observe(pulls)
         saveAttention()
-        pulls = authored + requested
         prioritize()
         Hub.shared.refresh()
         IslandManager.current?.refit()
     }
 
     /// Every page of one pull request search.
-    nonisolated static func searchAll(login: String, reviews: Bool) async -> [GitHub.Item]? {
+    nonisolated static func searchAll(login: String, reviews: Bool, mergedSince: Date? = nil) async -> [GitHub.Item]? {
         var found: [GitHub.Item] = []
         var cursor: String?
         var seen: Set<String> = []
         repeat {
-            guard let data = await searchPulls(GitHub.searchQuery(login: login, cursor: cursor, reviews: reviews)),
+            guard let data = await searchPulls(GitHub.searchQuery(login: login, cursor: cursor, reviews: reviews, mergedSince: mergedSince)),
                   let page = GitHub.page(fromSearch: data) else { return nil }
             found += page.pulls
             cursor = page.nextCursor
@@ -186,8 +188,31 @@ final class GitHubModule {
         return found
     }
 
-    var attentionCount: Int { attention.unread.count }
-    var hasFailedChecks: Bool { attention.unread.values.contains(where: \.checksFailed) }
+    /// The PRs tab lists open ones; the AI page also the ones merged lately.
+    var openPulls: [GitHub.Item] { pulls.filter { $0.mergedAt == nil } }
+
+    var attentionCount: Int { attention.unread.count + attention.unreadMerges.count }
+    /// The most pressing news, for the closed notch.
+    var tone: PullTone {
+        if attention.unread.values.contains(where: \.checksFailed) { return .failed }
+        return attention.unread.isEmpty ? .merged : .changes
+    }
+
+    /// Alerts for your open PRs, news for your merged ones; a review request shows in the list,
+    /// it doesn't call.
+    private func observe(_ pulls: [GitHub.Item]) {
+        let own = pulls.filter { $0.reviewRequested != true }
+        attention.update(own.filter { $0.mergedAt == nil })
+        attention.updateMerged(own.filter { $0.mergedAt != nil })
+    }
+
+    /// The list was on screen: merges need nothing more.
+    func sawMerges() {
+        guard !attention.unreadMerges.isEmpty else { return }
+        attention.sawMerges()
+        saveAttention()
+        Hub.shared.refresh()
+    }
     func needsAttention(_ pull: GitHub.Item) -> Bool { attention.unread[pull.id] != nil }
 
     /// PRs a thread works on (its repository and branch) first.
@@ -268,8 +293,8 @@ final class GitHubModule {
     /// Lab only; no gh calls or saved alert history. `changed` is a later fetch of the same PRs.
     func preview(pulls: [GitHub.Item], changed: [GitHub.Item]? = nil) {
         attention = GitHub.Attention()
-        attention.update(pulls.filter { $0.reviewRequested != true })
-        if let changed { attention.update(changed.filter { $0.reviewRequested != true }) }
+        observe(pulls)
+        if let changed { observe(changed) }
         self.pulls = changed ?? pulls
         prioritize()
         loadedAt = .now
@@ -280,7 +305,7 @@ final class GitHubModule {
     func open(_ link: String) {
         guard let url = URL(string: link) else { return }
         NSWorkspace.shared.open(url)
-        guard attention.unread[link] != nil else { return }
+        guard attention.unread[link] != nil || attention.unreadMerges.contains(link) else { return }
         attention.acknowledge(link)
         saveAttention()
         Hub.shared.refresh()

@@ -27,7 +27,8 @@ enum CompactPresentation: Equatable {
     case download(Double?)
     /// DaVinci Resolve renders: film left, percentage right.
     case render(Double)
-    case pullNotice(count: Int, failed: Bool)
+    /// Your PRs: a check failed, changes were asked or one got merged.
+    case pullNotice(count: Int, tone: PullTone)
 
     /// Short-lived or urgent: shows even where it covers an app's menus.
     var showsOverMenus: Bool {
@@ -187,11 +188,11 @@ struct CompactView: View {
             .font(.system(size: 12, weight: .semibold).monospacedDigit()).foregroundStyle(Color(nsColor: .systemOrange))
             .lineLimit(1).minimumScaleFactor(0.7)
             .frame(width: 38)
-        case .pullNotice(let count, let failed):
+        case .pullNotice(let count, let tone):
             HStack(spacing: 3) {
-                Image(systemName: failed ? "exclamationmark.circle.fill" : "text.bubble.fill")
+                Image(systemName: tone.symbol)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color(nsColor: failed ? .systemRed : .systemOrange))
+                    .foregroundStyle(Color(nsColor: tone.color))
                 if count > 1 { Text(verbatim: "\(count)").font(.system(size: 11, weight: .semibold)) }
             }
             .accessibilityElement(children: .ignore)
@@ -453,6 +454,27 @@ nonisolated final class BarLayers: @unchecked Sendable {
         // Only the bars that moved: every changed layer costs the commit.
         for index in bars.indices where heights[index] != previous[index] {
             bars[index].bounds.size.height = CGFloat(heights[index])
+        }
+    }
+}
+
+/// What a pull request notice says, most pressing first.
+enum PullTone: Equatable {
+    case failed, changes, merged
+
+    var symbol: String {
+        switch self {
+        case .failed: "exclamationmark.circle.fill"
+        case .changes: "text.bubble.fill"
+        case .merged: "arrow.triangle.merge"
+        }
+    }
+
+    var color: NSColor {
+        switch self {
+        case .failed: .systemRed
+        case .changes: .systemOrange
+        case .merged: .systemPurple
         }
     }
 }
