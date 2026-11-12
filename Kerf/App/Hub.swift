@@ -87,7 +87,7 @@ final class Hub {
         let waitingAgent: CompactPresentation? = waiting.first.map { .agent(agent: $0.agent, hostPath: $0.hostPath) }
         let pulls = GitHubModule.shared
         let pullNotice: CompactPresentation? = pulls.attentionCount > 0
-            ? .pullNotice(count: pulls.attentionCount, failed: pulls.hasFailedChecks) : nil
+            ? .pullNotice(count: pulls.attentionCount, tone: pulls.tone) : nil
         let new = busy ?? notice ?? pullNotice ?? NowPlayingModule.shared.compactPresentation ?? waitingAgent
         if presentation != new { presentation = new }
         observers.forEach { $0() }

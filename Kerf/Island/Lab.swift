@@ -244,6 +244,12 @@ struct Lab {
             AgentCenter.shared.preview(nil, sessions: [])
             previewPullAlert()
         },
+        "pull-merged": { _ in
+            AgentCenter.shared.preview(nil, sessions: [])
+            previewPulls()
+            let open = GitHubModule.shared.pulls.filter { $0.mergedAt == nil }
+            GitHubModule.shared.preview(pulls: open, changed: GitHubModule.shared.pulls)
+        },
         "pull-alert-open": { controller in
             AgentCenter.shared.preview(nil, sessions: [])
             previewPullAlert()
@@ -318,7 +324,7 @@ struct Lab {
     }
 
     static func previewPulls() {
-        let json = #"[{"number":42,"title":"Kerf: AI tab with threads","repository":{"nameWithOwner":"octocat/kerf"},"url":"https://github.com/octocat/kerf/pull/42","updatedAt":"2026-10-31T10:00:00Z","isDraft":false,"checks":"failing"},{"number":17,"title":"Weekly summary in Tempo","repository":{"nameWithOwner":"octocat/tempo"},"url":"https://github.com/octocat/tempo/pull/17","updatedAt":"2026-10-30T18:00:00Z","isDraft":true,"checks":"pending","changesRequested":true},{"number":8,"title":"Dark mode for the dashboard","repository":{"nameWithOwner":"octocat/atlas"},"url":"https://github.com/octocat/atlas/pull/8","updatedAt":"2026-11-01T09:00:00Z","isDraft":false,"checks":"passing","reviewRequested":true}]"#
+        let json = #"[{"number":42,"title":"Kerf: AI tab with threads","repository":{"nameWithOwner":"octocat/kerf"},"url":"https://github.com/octocat/kerf/pull/42","updatedAt":"2026-10-31T10:00:00Z","isDraft":false,"checks":"failing"},{"number":17,"title":"Weekly summary in Tempo","repository":{"nameWithOwner":"octocat/tempo"},"url":"https://github.com/octocat/tempo/pull/17","updatedAt":"2026-10-30T18:00:00Z","isDraft":true,"checks":"pending","changesRequested":true},{"number":8,"title":"Dark mode for the dashboard","repository":{"nameWithOwner":"octocat/atlas"},"url":"https://github.com/octocat/atlas/pull/8","updatedAt":"2026-11-01T09:00:00Z","isDraft":false,"checks":"passing","reviewRequested":true},{"number":16,"title":"Leave Copilot's approvals to Copilot","repository":{"nameWithOwner":"octocat/kerf"},"url":"https://github.com/octocat/kerf/pull/16","updatedAt":"2026-11-04T23:54:17Z","mergedAt":"2026-11-04T23:54:17Z","isDraft":false}]"#
         GitHubModule.shared.preview(pulls: GitHub.decode([GitHub.Item].self, from: Data(json.utf8)) ?? [])
     }
 

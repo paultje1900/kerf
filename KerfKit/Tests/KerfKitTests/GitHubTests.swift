@@ -92,5 +92,8 @@ struct GitHubSearchTests {
         #expect(GitHub.searchQuery(login: "JJWindt").contains("author:JJWindt"))
         #expect(!GitHub.searchQuery(login: "JJWindt").contains("involves:"))
         #expect(GitHub.searchQuery(login: "JJWindt", reviews: true).contains("review-requested:JJWindt"))
+        let merged = GitHub.searchQuery(login: "JJWindt", mergedSince: Date(timeIntervalSince1970: 0))
+        #expect(merged.contains("is:merged author:JJWindt merged:>=1970-01-01T00:00:00Z") && merged.contains("mergedAt"))
+        #expect(!merged.contains("is:open"))
     }
 }

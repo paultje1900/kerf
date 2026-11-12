@@ -43,6 +43,8 @@ public enum GitHub {
         public var headRepository: Repository?
         /// Someone else's PR that asks you for a review; nil or false for your own.
         public var reviewRequested: Bool?
+        /// When it was merged; nil while open.
+        public var mergedAt: Date?
         public var id: String { url }
     }
 
@@ -51,16 +53,20 @@ public enum GitHub {
         public var nextCursor: String?
     }
 
-    /// Your open PRs, or with `reviews` the ones asking you for a review: one page of a GraphQL
-    /// search for `gh api graphql -f query=…`, paginated so session-linked work is not lost
-    /// behind newer unrelated PRs.
-    public static func searchQuery(login: String, cursor: String? = nil, reviews: Bool = false) -> String {
-        let filter = reviews ? "review-requested:\(login)" : "author:\(login)"
-        let query = String(decoding: JSONValue.string("is:pr is:open archived:false \(filter) sort:updated-desc").encoded(), as: UTF8.self)
+    /// Your open PRs, with `reviews` the ones asking you for a review, or with `mergedSince` yours
+    /// merged since then: one page of a GraphQL search for `gh api graphql -f query=…`, paginated
+    /// so session-linked work is not lost behind newer unrelated PRs.
+    public static func searchQuery(login: String, cursor: String? = nil, reviews: Bool = false, mergedSince: Date? = nil) -> String {
+        let filter = if let mergedSince {
+            "is:merged author:\(login) merged:>=\(mergedSince.formatted(.iso8601))"
+        } else {
+            "is:open " + (reviews ? "review-requested:\(login)" : "author:\(login)")
+        }
+        let query = String(decoding: JSONValue.string("is:pr \(filter) archived:false sort:updated-desc").encoded(), as: UTF8.self)
         let after = cursor.map { ", after: " + String(decoding: JSONValue.string($0).encoded(), as: UTF8.self) } ?? ""
         return """
         query { search(query: \(query), type: ISSUE, first: 100\(after)) { pageInfo { hasNextPage endCursor } nodes { \
-        ... on PullRequest { number title url isDraft updatedAt reviewDecision repository { nameWithOwner } \
+        ... on PullRequest { number title url isDraft updatedAt mergedAt reviewDecision repository { nameWithOwner } \
         headRefName headRepository { nameWithOwner } \
         commits(last: 1) { nodes { commit { statusCheckRollup { state } } } } } } } }
         """
@@ -90,7 +96,8 @@ public enum GitHub {
                         updatedAt: node["updatedAt"]?.string.flatMap(dates.date(from:)), isDraft: node["isDraft"]?.bool,
                         checks: Item.Checks(rollup: rollup), changesRequested: node["reviewDecision"]?.string == "CHANGES_REQUESTED",
                         headRefName: node["headRefName"]?.string,
-                        headRepository: node["headRepository"]?["nameWithOwner"]?.string.map { .init(nameWithOwner: $0) })
+                        headRepository: node["headRepository"]?["nameWithOwner"]?.string.map { .init(nameWithOwner: $0) },
+                        mergedAt: node["mergedAt"]?.string.flatMap(dates.date(from:)))
         }
     }
 
@@ -114,8 +121,39 @@ public enum GitHub {
         private var previous: [String: Status] = [:]
         private var initialized = false
         public private(set) var unread: [String: Status] = [:]
+        /// Your merged PRs seen so far, and the ones merged since you last looked.
+        private var merges: Set<String> = []
+        private var mergesInitialized = false
+        public private(set) var unreadMerges: Set<String> = []
 
         public init() {}
+
+        private enum CodingKeys: String, CodingKey {
+            case previous, initialized, unread, merges, mergesInitialized, unreadMerges
+        }
+
+        /// Older saved states have no merges yet.
+        public init(from decoder: Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            previous = try values.decode([String: Status].self, forKey: .previous)
+            initialized = try values.decode(Bool.self, forKey: .initialized)
+            unread = try values.decode([String: Status].self, forKey: .unread)
+            merges = try values.decodeIfPresent(Set<String>.self, forKey: .merges) ?? []
+            mergesInitialized = try values.decodeIfPresent(Bool.self, forKey: .mergesInitialized) ?? false
+            unreadMerges = try values.decodeIfPresent(Set<String>.self, forKey: .unreadMerges) ?? []
+        }
+
+        /// Your PRs merged lately: one not seen before is news, except on the first look.
+        public mutating func updateMerged(_ pulls: [Item]) {
+            let ids = Set(pulls.map(\.id))
+            if mergesInitialized { unreadMerges.formUnion(ids.subtracting(merges)) }
+            unreadMerges.formIntersection(ids)
+            merges = ids
+            mergesInitialized = true
+        }
+
+        /// You looked at the list.
+        public mutating func sawMerges() { unreadMerges = [] }
 
         public mutating func update(_ pulls: [Item]) {
             var next: [String: Status] = [:]
@@ -136,7 +174,10 @@ public enum GitHub {
             initialized = true
         }
 
-        public mutating func acknowledge(_ id: String) { unread.removeValue(forKey: id) }
+        public mutating func acknowledge(_ id: String) {
+            unread.removeValue(forKey: id)
+            unreadMerges.remove(id)
+        }
     }
 
     public struct Run: Codable, Equatable, Sendable, Identifiable {
