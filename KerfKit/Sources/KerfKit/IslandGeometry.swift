@@ -61,6 +61,16 @@ public struct IslandGeometry: Equatable, Sendable {
         CGSize(width: style.centerWidth + 2 * wings, height: style.bandHeight)
     }
 
+    /// The compact island with content this wide on each side of the notch, and how far its
+    /// middle sits right of the notch's. A side of a notch island without content stays behind
+    /// the notch, like the idle island.
+    public func compact(leading: CGFloat, trailing: CGFloat) -> (size: CGSize, shift: CGFloat) {
+        let hidden: CGFloat = style == .floating ? 0 : -1
+        let left = leading > 0 ? leading : hidden
+        let right = trailing > 0 ? trailing : hidden
+        return (CGSize(width: style.centerWidth + left + right, height: style.bandHeight), (right - left) / 2)
+    }
+
     /// Bottom corner radius at a height: the notch's own radius when closed, growing to 24 pt open.
     /// A floating island is a capsule while it is compact.
     public func cornerRadius(height: CGFloat, openHeight: CGFloat) -> CGFloat {
@@ -78,7 +88,14 @@ public struct IslandGeometry: Equatable, Sendable {
     /// The flare at the top grows in as the island gets wider than the notch, so the idle island
     /// adds nothing around it. Floating islands have none.
     public func ear(width: CGFloat) -> CGFloat {
-        guard case .notch(let notch) = style else { return 0 }
-        return min(IslandGeometry.ear, max(0, (width - notch.width) / 2))
+        ears(width: width, shift: 0).leading
+    }
+
+    /// The flare on each side, for an island whose middle sits `shift` right of the notch's: only
+    /// where it reaches past the notch.
+    public func ears(width: CGFloat, shift: CGFloat) -> (leading: CGFloat, trailing: CGFloat) {
+        guard case .notch(let notch) = style else { return (0, 0) }
+        let reach = (width - notch.width) / 2
+        return (min(IslandGeometry.ear, max(0, reach - shift)), min(IslandGeometry.ear, max(0, reach + shift)))
     }
 }

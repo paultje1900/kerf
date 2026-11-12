@@ -10,6 +10,8 @@ final class Hub {
     /// How many threads are blocked on you; the orange dot shows while it's above zero.
     private(set) var waitingCount = 0
     var agentWaiting: Bool { waitingCount > 0 }
+    /// The Claude usage rings beside the notch, while switched on and known.
+    private(set) var usage: UsageStrip?
     private(set) var pages: [IslandPage] = IslandPage.arrange(offloadActive: false).bar
     /// Pages under "…".
     private(set) var morePages: [IslandPage] = IslandPage.arrange(offloadActive: false).more
@@ -72,6 +74,8 @@ final class Hub {
         let agents = AgentCenter.shared
         let waiting = agents.waitingSessions
         if waitingCount != waiting.count { waitingCount = waiting.count }
+        let rings = ClaudeUsageModule.shared.strip
+        if usage != rings { usage = rings }
         let offload = OffloadModule.shared
         let arranged = IslandPage.arrange(offloadActive: offload.isActive)
         if pages != arranged.bar { pages = arranged.bar }

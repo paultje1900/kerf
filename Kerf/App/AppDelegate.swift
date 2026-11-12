@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         RenderWatcher.shared.stop()
         AudioLevels.shared.stop()
         AppMixer.shared.stopAll()
+        NotchSpace.remove()
     }
 
     /// `kill` and Ctrl-C skip applicationWillTerminate; without this the adapter would outlive Kerf.
@@ -25,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     // Taps and their devices go too: the audio daemon may not clean up after us.
                     AudioLevels.shared.stop()
                     AppMixer.shared.stopAll()
+                    NotchSpace.remove()
                     exit(0)
                 }
             }

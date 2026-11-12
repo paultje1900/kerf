@@ -44,7 +44,7 @@ final class AskModule {
     var hasAnswer: Bool { !answer.isEmpty || isRunning || failure != nil }
 
     nonisolated private static var historyURL: URL { KerfPaths.support.appendingPathComponent("conversations.json") }
-    nonisolated private static var workFolder: URL { KerfPaths.support.appendingPathComponent("Ask", isDirectory: true) }
+    nonisolated static var workFolder: URL { KerfPaths.support.appendingPathComponent("Ask", isDirectory: true) }
 
     func start() {
         Task.detached(priority: .utility) {
@@ -105,7 +105,7 @@ final class AskModule {
 
     // MARK: Claude
 
-    private static func claudeExecutable() -> String? {
+    nonisolated static func claudeExecutable() -> String? {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let candidates = ["/opt/homebrew/bin/claude", "/usr/local/bin/claude", "\(home)/.claude/local/claude", "\(home)/.local/bin/claude"]
         return candidates.first { FileManager.default.isExecutableFile(atPath: $0) }

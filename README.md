@@ -11,6 +11,7 @@ The notch for your coding agents: a Dynamic Island for the MacBook that looks an
 
 Everything else is off until you switch it on in **Settings → Features**. What's off doesn't run and asks for no permission.
 
+- **Claude usage**: three rings beside the notch, left or right, always there: how much is used of your 5-hour session, your week and your week of Fable, each in its own colour. Read from your own Claude Code, without spending anything of the plan.
 - **GitHub**: pull requests, CI, issues and a repo's files, through `gh`. Your PRs and review requests also show under the threads, the ones a thread works on first; a quiet alert in the notch when checks newly fail or a reviewer asks for changes.
 - **Ask Claude**: ⌥ Space. A question goes to Claude through your own Claude Code, a few words to Google. ⌥⇧ Space asks about the selected text. Drop files or take a screenshot to ask about them; speak instead of typing. Without it, ⌥ Space opens the island.
 - **Now Playing** and **Mixer**: whatever plays (Music, Spotify, podcasts) in Apple Music's island card, and a volume per app. **Volume and brightness** in the notch; scroll over it for volume.
@@ -40,7 +41,7 @@ Update with `brew upgrade --cask kerf`. To remove it, first press Disconnect in 
 Kerf has no server and no account. Everything stays on your Mac, except, once you switch them on:
 
 - the weather: your approximate location goes to [Open-Meteo](https://open-meteo.com);
-- what you ask Claude goes through your own Claude Code, and GitHub through your own `gh`;
+- what you ask Claude and your plan's usage go through your own Claude Code, and GitHub through your own `gh`;
 - a search opens Google in your browser.
 
 ## Build from source

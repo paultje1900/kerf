@@ -54,16 +54,30 @@ final class IslandController {
 
     /// Hidden while an app is full screen on this display.
     private(set) var isHiddenForFullScreen = false
+    /// Hidden on a locked screen and under the screen saver: the island's own space is above the saver.
+    private(set) var isHiddenForLock = false
+    private var isHidden: Bool { isHiddenForFullScreen || isHiddenForLock }
 
     func show() {
-        guard !isHiddenForFullScreen else { return }
+        guard !isHidden else { return }
         panel.orderFrontRegardless()
     }
 
     func setHiddenForFullScreen(_ hidden: Bool) {
         guard hidden != isHiddenForFullScreen else { return }
-        isHiddenForFullScreen = hidden
-        if hidden {
+        hide { isHiddenForFullScreen = hidden }
+    }
+
+    func setHiddenForLock(_ hidden: Bool) {
+        guard hidden != isHiddenForLock else { return }
+        hide { isHiddenForLock = hidden }
+    }
+
+    private func hide(_ change: () -> Void) {
+        let wasHidden = isHidden
+        change()
+        guard isHidden != wasHidden else { return }
+        if isHidden {
             if island.mode == .expanded { close() }
             panel.orderOut(nil)
         } else {
@@ -82,7 +96,7 @@ final class IslandController {
         if island.pages != hub.pages { island.pages = hub.pages }
         let available = hub.pages + hub.morePages
         if !available.contains(island.page), let start = hub.startPage { island.select(start) }
-        island.show(hub.presentation, waiting: hub.waitingCount)
+        island.show(hub.presentation, waiting: hub.waitingCount, usage: hub.usage)
         // The open page may need another height now.
         island.refit()
     }
@@ -169,14 +183,17 @@ final class IslandController {
         if island.mode == .idle, island.geometry.style == .floating { size = CGSize(width: 200, height: 8) }
         let top = screen.frame.maxY - (island.geometry.style == .floating ? IslandGeometry.floatingTop : 0)
         // Up to 12 pt of air on each side, less where an app's menus come close.
-        let wings = max(0, (size.width - island.geometry.idle.width) / 2)
-        let air = min(12, max(0, island.menuRoom - wings - 2))
-        return NSRect(x: screen.frame.midX - size.width / 2 - air, y: top - size.height - 10, width: size.width + 2 * air, height: size.height + 10)
+        let shift = island.shift(of: island.mode)
+        let reach = (size.width - island.geometry.idle.width) / 2
+        let left = min(12, max(0, island.menuRoom.left - max(0, reach - shift) - 2))
+        let right = min(12, max(0, island.menuRoom.right - max(0, reach + shift) - 2))
+        return NSRect(x: screen.frame.midX + shift - size.width / 2 - left, y: top - size.height - 10,
+                      width: size.width + left + right, height: size.height + 10)
     }
 
     /// Hover lifts the island at once and opens it after resting there; away closes it.
     private func pointerMoved() {
-        guard !isHiddenForFullScreen else { return }
+        guard !isHidden else { return }
         let inside = hotZone.contains(NSEvent.mouseLocation)
         // Only touch the window server when something changes; this runs on every mouse move.
         if !panel.acceptsKeyboard, panel.ignoresMouseEvents == inside { panel.ignoresMouseEvents = !inside }

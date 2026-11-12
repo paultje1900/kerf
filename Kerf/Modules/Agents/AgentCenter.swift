@@ -363,8 +363,11 @@ final class AgentCenter {
             // Only background subagents outlive the turn.
             if !subagentsRunning { session.subagents = [] }
             if Self.showsDone, UserDefaults.standard.object(forKey: Self.soundsDoneKey) as? Bool ?? true { Sounds.play(.done) }
+            if envelope.agent == .claudeCode { ClaudeUsageModule.shared.turnEnded() }
         case .stopFailed(let error, _):
             connection?.reply(nil)
+            // Often the limit itself: the rings should say so.
+            if envelope.agent == .claudeCode { ClaudeUsageModule.shared.turnEnded() }
             // Not done: it stopped on an error and waits for you to pick it up. Stays in the notch.
             session.state = .idle
             session.unread = true
