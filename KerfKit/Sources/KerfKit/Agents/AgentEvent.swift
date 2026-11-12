@@ -112,7 +112,8 @@ extension JSONValue {
     }
 }
 
-/// A thread's title: the first thing you asked, on one line.
+/// A thread's title: the name Claude Code gave it or you renamed it to, else the first thing you
+/// asked, on one line.
 public enum ThreadTitle {
     public static func from(prompt: String) -> String? {
         let line = prompt.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.first { !$0.isEmpty } ?? ""
@@ -137,6 +138,28 @@ public enum ThreadTitle {
             }
         }
         return nil
+    }
+
+    /// The name at the end of a Claude Code transcript: yours after a rename, else its own. It
+    /// writes both again every few turns, so the last stretch of the file holds them.
+    public static func named(inTail data: Data) -> String? {
+        var custom: String?
+        var generated: String?
+        for line in data.split(separator: 0x0A) where line.range(of: Data(#"-title""#.utf8)) != nil {
+            guard let json = JSONValue.parse(Data(line)) else { continue }
+            // {"type":"custom-title","customTitle":"…"} and {"type":"ai-title","aiTitle":"…"}
+            switch json["type"]?.string {
+            case "custom-title": custom = json["customTitle"]?.string.flatMap(from) ?? custom
+            case "ai-title": generated = json["aiTitle"]?.string.flatMap(from) ?? generated
+            default: break
+            }
+        }
+        return custom ?? generated
+    }
+
+    /// A transcript's title: its name, else its first prompt.
+    public static func fromTranscript(at url: URL) -> String? {
+        named(inTail: RunningThreads.read(url, tail: true)) ?? fromTranscript(RunningThreads.read(url, tail: false))
     }
 }
 

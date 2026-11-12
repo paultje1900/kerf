@@ -303,8 +303,13 @@ final class AgentCenter {
         session.hostPath = envelope.host ?? session.hostPath
         session.tty = envelope.tty ?? session.tty
         session.cwd = payload.workingDirectory ?? session.cwd
-        // A thread Kerf joins halfway gets its title from the transcript.
-        if isNew, session.title == nil, let transcript = payload.transcriptPath { loadTitle(sessionID, from: transcript) }
+        // A thread Kerf joins halfway gets its title from the transcript. Claude Code names it during
+        // the first turn and again when you rename it, so each turn reads it once more.
+        let readsTitle = switch event {
+        case .stop, .promptSubmitted: true
+        default: isNew
+        }
+        if readsTitle, let transcript = payload.transcriptPath { loadTitle(sessionID, from: transcript) }
 
         switch event {
         case .permission, .question:
@@ -530,13 +535,10 @@ final class AgentCenter {
 
     private func loadTitle(_ sessionID: String, from path: String) {
         Task.detached(priority: .utility) {
-            guard let handle = FileHandle(forReadingAtPath: path) else { return }
-            let head = handle.readData(ofLength: 256 * 1024)
-            try? handle.close()
-            guard let title = ThreadTitle.fromTranscript(head) else { return }
+            guard let title = ThreadTitle.fromTranscript(at: URL(fileURLWithPath: path)) else { return }
             await MainActor.run {
                 guard let index = AgentCenter.shared.sessions.firstIndex(where: { $0.id == sessionID }),
-                      AgentCenter.shared.sessions[index].title == nil else { return }
+                      AgentCenter.shared.sessions[index].title != title else { return }
                 AgentCenter.shared.sessions[index].title = title
             }
         }

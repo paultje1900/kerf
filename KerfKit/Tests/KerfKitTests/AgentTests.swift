@@ -218,6 +218,24 @@ struct AgentDetailsTests {
         #expect(ThreadTitle.fromTranscript(codex) == "Review the PR")
     }
 
+    @Test func namedTitles() {
+        // Cut off mid-line, as a tail read is.
+        let generated = Data("""
+        ype":"user"}
+        {"type":"ai-title","aiTitle":"Set up the project","sessionId":"a"}
+        {"type":"user","message":{"role":"user","content":"x"},"note":"ai-title"}
+        {"type":"ai-title","aiTitle":"Port the waiting dot","sessionId":"a"}
+        """.utf8)
+        #expect(ThreadTitle.named(inTail: generated) == "Port the waiting dot")
+        // A rename wins over Claude Code's own name, wherever it is.
+        let renamed = Data("""
+        {"type":"custom-title","customTitle":"Waiting dot","sessionId":"a"}
+        {"type":"ai-title","aiTitle":"Port the waiting dot","sessionId":"a"}
+        """.utf8)
+        #expect(ThreadTitle.named(inTail: renamed) == "Waiting dot")
+        #expect(ThreadTitle.named(inTail: Data(#"{"type":"user","message":{"content":"Hi"}}"#.utf8)) == nil)
+    }
+
     @Test func projectNames() throws {
         let base = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("kerf-project-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: base) }

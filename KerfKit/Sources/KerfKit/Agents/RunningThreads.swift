@@ -38,11 +38,12 @@ public enum RunningThreads {
             guard let transcript = written.first(where: { $0.url == named }) ?? written.first else { continue }
             claimed.insert(transcript.url.path)
             // Nothing written for a long while: stuck or gone, not working.
-            guard now.timeIntervalSince(transcript.date) < 15 * 60,
-                  ClaudeTranscript.isMidTurn(read(transcript.url, tail: true)) else { continue }
+            guard now.timeIntervalSince(transcript.date) < 15 * 60 else { continue }
+            let tail = read(transcript.url, tail: true)
+            guard ClaudeTranscript.isMidTurn(tail) else { continue }
             found.append(Found(sessionID: transcript.url.deletingPathExtension().lastPathComponent, cwd: cwd,
                                hostPath: ProcessTree.hostApp(of: pid)?.bundlePath, tty: ProcessTree.terminal(of: pid),
-                               title: ThreadTitle.fromTranscript(read(transcript.url, tail: false)), updated: transcript.date))
+                               title: ThreadTitle.named(inTail: tail) ?? ThreadTitle.fromTranscript(read(transcript.url, tail: false)), updated: transcript.date))
         }
         return found
     }
@@ -51,7 +52,7 @@ public enum RunningThreads {
         try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
     }
 
-    private static func read(_ url: URL, tail: Bool) -> Data {
+    static func read(_ url: URL, tail: Bool) -> Data {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return Data() }
         defer { try? handle.close() }
         let length: UInt64 = 256 * 1024
