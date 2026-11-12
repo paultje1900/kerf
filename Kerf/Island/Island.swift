@@ -18,8 +18,12 @@ final class Island {
     private(set) var mode: IslandMode = .idle
     private(set) var width: CGFloat
     private(set) var height: CGFloat
+    /// How far the island's middle sits right of the notch's: content on one side only pulls it there.
+    private(set) var shift: CGFloat = 0
     /// 0 hidden, 1 shown.
     private(set) var compactShown = 0.0
+    /// The usage rings' own fade: they stay while what's beside them changes.
+    private(set) var usageShown = 0.0
     private(set) var expandedShown = 0.0
     /// The page's own fade, for switching pages while open.
     private(set) var pageShown = 1.0
@@ -27,6 +31,8 @@ final class Island {
     private(set) var expandedMounted = false
     private(set) var isHovered = false
     private(set) var presentation: CompactPresentation?
+    /// The usage rings, when they're switched on and known.
+    private(set) var usage: UsageStrip?
     /// Threads waiting on you, for the orange dot.
     private(set) var waitingCount = 0
     var showsAgentDot: Bool { waitingCount > 0 }
@@ -44,28 +50,53 @@ final class Island {
         height = geometry.idle.height
     }
 
-    /// Free room beside the notch, from the menu bar. Infinite until known and on other displays.
-    private(set) var menuRoom: CGFloat = .infinity
+    /// Free room on each side of the notch, from the menu bar. Open until known and on other displays.
+    private(set) var menuRoom = MenuBarRoom.Sides.open
 
-    /// What shows beside the notch: the presentation when it fits next to the app's menus. The
-    /// rest waits for room, or a hover.
-    var fittingPresentation: CompactPresentation? {
-        guard let presentation else { return nil }
-        return presentation.showsOverMenus || MenuBarRoom.fits(wings: IslandGeometry.wing, in: menuRoom) ? presentation : nil
+    /// The rings, when they fit beside the app's menus on their side. Otherwise they wait for room.
+    var fittingUsage: UsageStrip? {
+        guard let usage, MenuBarRoom.fits(wings: usage.width, in: usage.side == .left ? menuRoom.left : menuRoom.right) else { return nil }
+        return usage
     }
 
-    var restingMode: IslandMode { fittingPresentation != nil || showsAgentDot ? .compact : .idle }
+    /// What shows beside the notch: the presentation when it fits next to the app's menus, past
+    /// the rings. The rest waits for room, or a hover.
+    var fittingPresentation: CompactPresentation? {
+        guard let presentation else { return nil }
+        if presentation.showsOverMenus { return presentation }
+        let rings = fittingUsage
+        let fits = MenuBarRoom.fits(wings: IslandGeometry.wing + (rings?.side == .left ? rings?.width ?? 0 : 0), in: menuRoom.left)
+            && MenuBarRoom.fits(wings: IslandGeometry.wing + (rings?.side == .right ? rings?.width ?? 0 : 0), in: menuRoom.right)
+        return fits ? presentation : nil
+    }
 
-    func setMenuRoom(_ room: CGFloat) {
+    /// A presentation or the dot: a wing on each side of the notch.
+    private var showsWings: Bool { fittingPresentation != nil || showsAgentDot }
+
+    var restingMode: IslandMode { showsWings || fittingUsage != nil ? .compact : .idle }
+
+    func setMenuRoom(_ room: MenuBarRoom.Sides) {
         guard room != menuRoom else { return }
         menuRoom = room
         settle()
     }
 
+    /// The compact island: the rings next to the notch on their side, a wing past them on both.
+    private var compact: (size: CGSize, shift: CGFloat) {
+        let wing = showsWings ? IslandGeometry.wing : 0
+        let rings = fittingUsage
+        return geometry.compact(leading: wing + (rings?.side == .left ? rings?.width ?? 0 : 0),
+                                trailing: wing + (rings?.side == .right ? rings?.width ?? 0 : 0))
+    }
+
+    func shift(of mode: IslandMode) -> CGFloat {
+        mode == .compact ? compact.shift : 0
+    }
+
     func size(of mode: IslandMode) -> CGSize {
         var size = switch mode {
         case .idle: geometry.idle
-        case .compact: geometry.compact()
+        case .compact: compact.size
         case .expanded: CGSize(width: Layout.openWidth, height: geometry.style.bandHeight + contentHeight)
         }
         let floatingIdle = mode == .idle && geometry.style == .floating
@@ -87,10 +118,16 @@ final class Island {
             pageShown = 1
         }
         // Asked fresh each time: the open page may measure itself while the width starts moving.
-        withAnimation(springs.width) { width = size(of: next).width }
+        withAnimation(springs.width) {
+            width = size(of: next).width
+            shift = shift(of: next)
+        }
         withAnimation(springs.height) { height = size(of: next).height }
         withAnimation(Motion.fadeOut(from: previous)) {
-            if next != .compact { compactShown = 0 }
+            if next != .compact {
+                compactShown = 0
+                usageShown = 0
+            }
         }
         if next != .expanded {
             withAnimation(Motion.fadeOut(from: previous), completionCriteria: .removed) {
@@ -104,7 +141,10 @@ final class Island {
         let quick = if case .level = presentation { true } else { false }
         guard let fadeIn = quick && next == .compact ? .smooth(duration: 0.1) : Motion.fadeIn(to: next, from: previous) else { return }
         withAnimation(fadeIn) {
-            if next == .compact { compactShown = 1 }
+            if next == .compact {
+                compactShown = 1
+                usageShown = fittingUsage == nil ? 0 : 1
+            }
             if next == .expanded { expandedShown = 1 }
         }
     }
@@ -112,7 +152,18 @@ final class Island {
     /// Back to where the island rests, unless it is open.
     func settle() {
         guard mode != .expanded else { return }
-        if mode == restingMode { resize(.spring(Motion.appear)) } else { go(restingMode) }
+        if mode == restingMode {
+            resize(.spring(Motion.appear))
+            fadeUsage()
+        } else {
+            go(restingMode)
+        }
+    }
+
+    /// The rings came, went, or found room while the island stayed compact.
+    private func fadeUsage() {
+        let shown: Double = mode == .compact && fittingUsage != nil ? 1 : 0
+        if usageShown != shown { withAnimation(.smooth(duration: 0.2)) { usageShown = shown } }
     }
 
     func setHovered(_ hovered: Bool) {
@@ -122,9 +173,10 @@ final class Island {
     }
 
     /// New compact content. Same kind updates in place; another kind fades out, swaps and fades in.
-    func show(_ new: CompactPresentation?, waiting: Int) {
+    func show(_ new: CompactPresentation?, waiting: Int, usage newUsage: UsageStrip? = nil) {
         let kindChanged = new?.kind != presentation?.kind
-        guard kindChanged || new != presentation || waiting != waitingCount else { return }
+        guard kindChanged || new != presentation || waiting != waitingCount || newUsage != usage else { return }
+        usage = newUsage
         // Something new for you: one more thread waiting, or one more thread with a notice.
         if waiting > waitingCount || !kindChanged && (new?.noticeCount ?? 0) > (presentation?.noticeCount ?? 0) { bump() }
         guard kindChanged, mode == .compact, compactShown > 0 else {
@@ -147,6 +199,7 @@ final class Island {
             } else {
                 resize(.spring(Motion.appear))
                 withAnimation(.smooth(duration: 0.2)) { compactShown = 1 }
+                fadeUsage()
             }
         }
     }
@@ -202,6 +255,7 @@ final class Island {
         withAnimation(.spring(Motion.bump)) {
             width = rest.width + 12
             height = rest.height + 3
+            shift = shift(of: mode == .idle ? .compact : mode)
         }
         Task {
             try? await Task.sleep(for: .seconds(0.12))
@@ -212,7 +266,10 @@ final class Island {
     private func resize(_ animation: Animation) {
         // Asked fresh for each axis, like `go`: setting the width can lay out a page that just
         // came in, and the height it measures must win over the estimate from before.
-        withAnimation(animation) { width = size(of: mode).width }
+        withAnimation(animation) {
+            width = size(of: mode).width
+            shift = shift(of: mode)
+        }
         withAnimation(animation) { height = size(of: mode).height }
     }
 }

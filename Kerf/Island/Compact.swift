@@ -99,17 +99,23 @@ struct CompactView: View {
     private let wings = IslandGeometry.wing
     /// Threads waiting on you: the orange dot takes the right side, whatever else shows.
     let waitingCount: Int
+    /// The usage rings sit between the notch and the wing on their side. The island draws them;
+    /// here they only get their room.
+    var usage: UsageStrip?
 
     var body: some View {
+        let rings = usage?.width ?? 0
         HStack(spacing: 0) {
-            leading
-                .frame(width: wings)
+            // Each wing keeps its room, also while it's empty: the middle stays on the notch.
+            Color.clear.frame(width: wings).overlay { leading }
             Color.clear.frame(width: centerWidth)
-            Group {
+                .padding(usage?.side == .left ? .leading : .trailing, rings)
+            Color.clear.frame(width: wings).overlay {
                 if waitingCount > 0 { AgentDot(count: waitingCount) } else { trailing }
             }
-            .frame(width: wings)
         }
+        // As much air on the other side, so the middle stays on the notch.
+        .padding(usage?.side == .left ? .trailing : .leading, rings)
         .frame(height: height)
     }
 

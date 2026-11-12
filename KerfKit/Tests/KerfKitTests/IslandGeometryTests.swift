@@ -30,6 +30,37 @@ struct IslandGeometryTests {
         #expect(notch.ear(width: 265) == 6)
         #expect(floating.ear(width: 400) == 0)
     }
+
+    @Test func contentOnOneSideLeavesTheOtherBehindTheNotch() {
+        // Rings on the right only: the left edge stays a point inside the notch.
+        let right = notch.compact(leading: 0, trailing: 80)
+        #expect(right.size == CGSize(width: 264, height: 32))
+        #expect(right.shift == 40.5)
+        let left = notch.compact(leading: 80, trailing: 0)
+        #expect(left.size.width == 264)
+        #expect(left.shift == -40.5)
+        // With wings on both sides as well.
+        let both = notch.compact(leading: 40, trailing: 120)
+        #expect(both.size.width == 345)
+        #expect(both.shift == 40)
+        // The same as two wings.
+        #expect(notch.compact(leading: 40, trailing: 40).size == notch.compact())
+        #expect(notch.compact(leading: 40, trailing: 40).shift == 0)
+        #expect(floating.compact(leading: 0, trailing: 80).size.width == 200)
+    }
+
+    @Test func earsOnlyOnTheSideThatReachesOut() {
+        let right = notch.compact(leading: 0, trailing: 80)
+        let ears = notch.ears(width: right.size.width, shift: right.shift)
+        #expect(ears.leading == 0)
+        #expect(ears.trailing == 6)
+        #expect(notch.ears(width: 265, shift: 0).leading == 6)
+        #expect(notch.ears(width: 265, shift: 0).trailing == 6)
+        // Halfway there: the flare grows in with the side.
+        #expect(notch.ears(width: 191, shift: 2).trailing == 5)
+        #expect(notch.ears(width: 191, shift: 2).leading == 1)
+        #expect(floating.ears(width: 400, shift: 30).trailing == 0)
+    }
 }
 
 struct MenuBarRoomTests {
@@ -83,6 +114,17 @@ struct MenuBarRoomTests {
         let room = MenuBarRoom.free(notchMinX: notch.min, notchMaxX: notch.max, items: resolve)
         #expect(room == 4)
         #expect(!MenuBarRoom.fits(wings: 40, in: room))
+    }
+
+    @Test func eachSideHasItsOwnRoom() {
+        // Safari's menus end 95 pt before the notch; the status items start 320 pt after it.
+        let safari = [CGRect(x: 520, y: 0, width: 48, height: 24), CGRect(x: 1168, y: 0, width: 30, height: 24)]
+        let room = MenuBarRoom.sides(notchMinX: notch.min, notchMaxX: notch.max, items: safari)
+        #expect(room == MenuBarRoom.Sides(left: 95, right: 320))
+        #expect(MenuBarRoom.fits(wings: 80, in: room.left))
+        #expect(!MenuBarRoom.fits(wings: 120, in: room.left))
+        #expect(MenuBarRoom.fits(wings: 120, in: room.right))
+        #expect(MenuBarRoom.sides(notchMinX: notch.min, notchMaxX: notch.max, items: []) == .open)
     }
 
     @Test func itemsBehindTheNotchDontCount() {

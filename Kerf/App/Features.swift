@@ -5,7 +5,7 @@ import SwiftUI
 /// What Kerf does, each switched on or off in Settings → Features. Out of the box Kerf is the
 /// notch for coding agents: only Agents is on, the rest waits until you switch it on.
 enum Feature: String, CaseIterable, Identifiable {
-    case agents, github, ask
+    case agents, usage, github, ask
     case music, mixer, levels
     case calendar, weather, timer
     case shelf, clipboard, downloads, offload
@@ -41,7 +41,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var group: Group {
         switch self {
-        case .agents, .github, .ask: .coding
+        case .agents, .usage, .github, .ask: .coding
         case .music, .mixer, .levels: .sound
         case .calendar, .weather, .timer: .day
         case .shelf, .clipboard, .downloads, .offload: .files
@@ -52,6 +52,7 @@ enum Feature: String, CaseIterable, Identifiable {
     var title: LocalizedStringResource {
         switch self {
         case .agents: "Coding agents"
+        case .usage: "Claude usage"
         case .github: "GitHub"
         case .ask: "Ask Claude"
         case .music: "Now Playing"
@@ -74,6 +75,7 @@ enum Feature: String, CaseIterable, Identifiable {
     var summary: LocalizedStringResource {
         switch self {
         case .agents: "Claude Code, Codex and Copilot ask for permission and answers in the notch. Connect them under Agents."
+        case .usage: "Three rings beside the notch, always there: how much is used of your 5-hour session, your week and your week of Fable. Read from your own Claude Code."
         case .github: "Pull requests, checks, issues and branches through the GitHub CLI (gh). Your pull requests also show beside the threads."
         case .ask: "⌥ Space asks Claude through your own Claude Code, ⌥⇧ Space asks about the selected text."
         case .music: "Whatever plays, with a live waveform in the notch."
@@ -97,6 +99,7 @@ enum Feature: String, CaseIterable, Identifiable {
     fileprivate func start(asking: Bool) {
         switch self {
         case .agents: AgentCenter.shared.start()
+        case .usage: ClaudeUsageModule.shared.start()
         case .github: GitHubModule.shared.start()
         case .ask:
             AskModule.shared.start()
@@ -127,6 +130,7 @@ enum Feature: String, CaseIterable, Identifiable {
     fileprivate func stop() {
         switch self {
         case .agents: AgentCenter.shared.switchOff()
+        case .usage: ClaudeUsageModule.shared.stop()
         case .github: GitHubModule.shared.stop()
         case .ask: Shortcuts.update()
         case .music: NowPlayingModule.shared.switchOff()
@@ -204,6 +208,8 @@ final class FeatureSwitches {
             case .downloads: defaults.bool(forKey: "extras.downloads")
             case .airpods: defaults.object(forKey: "extras.airpods") as? Bool ?? true
             case .levels: defaults.object(forKey: "hud.replacesSystem") as? Bool ?? true
+            // Newer than the switches: off until asked for.
+            case .usage: false
             default: true
             }
             defaults.set(on, forKey: feature.key)

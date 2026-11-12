@@ -1,4 +1,5 @@
 import AppKit
+import IOBluetooth
 import KerfKit
 import SwiftUI
 
@@ -12,13 +13,19 @@ import SwiftUI
 ///                                     `open -n`, so macOS asks Kerf's permission, not the shell's),
 ///                                     and `synth` puts a music-like test signal in what it hears
 ///     Kerf --lab workflows            checks queue, drafts and branch labels without real sessions
+///     Kerf --lab bluetooth            a device connects, called off the main thread the way IOBluetooth
+///                                     does: Kerf 0.1.0 quit there
+///     Kerf --lab hold <scene> <seconds>
+///                                     keeps a scene on screen, to look at it while you switch desktops
 struct Lab {
     enum Job {
         case motion(URL)
         case shot(String, URL)
+        case hold(String, Double)
         /// Opens with the keyboard, switches to another app, closes: logs whether the island stays.
         case focus
         case workflows
+        case bluetooth
         /// Writes an app's menu titles and the room they leave beside the notch to a file.
         case menus(pid: pid_t, file: URL)
         case levels(seconds: Double, tap: Bool, synth: Bool)
@@ -36,10 +43,15 @@ struct Lab {
             job = .workflows
             return
         }
+        if arguments[index + 1] == "bluetooth" {
+            job = .bluetooth
+            return
+        }
         guard arguments.count > index + 2 else { return nil }
         switch arguments[index + 1] {
         case "motion": job = .motion(URL(fileURLWithPath: arguments[index + 2]))
         case "shot" where arguments.count > index + 3: job = .shot(arguments[index + 2], URL(fileURLWithPath: arguments[index + 3]))
+        case "hold" where arguments.count > index + 3: job = .hold(arguments[index + 2], Double(arguments[index + 3]) ?? 10)
         case "menus" where arguments.count > index + 3:
             job = .menus(pid: pid_t(arguments[index + 2]) ?? 0, file: URL(fileURLWithPath: arguments[index + 3]))
         case "levels":
@@ -100,6 +112,36 @@ struct Lab {
             previewMusic()
             Self.scenes["today"]?(controller)
             controller.open(page: .home)
+        },
+        // Claude's usage beside the notch: 5 hours, week, Fable.
+        "usage": { _ in previewUsage() },
+        "usage-left": { _ in previewUsage(side: .left) },
+        "usage-music": { _ in previewUsage(); previewMusic() },
+        "usage-left-music": { _ in previewUsage(side: .left); previewMusic() },
+        "usage-dot": { controller in previewUsage(); controller.island.show(nil, waiting: 2, usage: Hub.shared.usage) },
+        // Close to the limits, and a plan without a model limit.
+        "usage-high": { _ in
+            ClaudeUsageModule.shared.preview(ClaudeUsage(session: .init(percent: 100), week: .init(percent: 91), model: .init(percent: 76), modelName: "Fable"))
+        },
+        "usage-two": { _ in ClaudeUsageModule.shared.preview(ClaudeUsage(session: .init(percent: 4), week: .init(percent: 37))) },
+        "usage-open": { previewUsage(); $0.open() },
+        // Rings, open, closed again, music beside them, gone: to watch that nothing in the island moves.
+        "usage-cycle": { controller in
+            previewUsage()
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                controller.open()
+                try? await Task.sleep(for: .seconds(1.5))
+                controller.close()
+                try? await Task.sleep(for: .seconds(1.5))
+                previewMusic()
+                try? await Task.sleep(for: .seconds(1.5))
+                NowPlayingModule.shared.preview(nil, artwork: nil, tint: .pink)
+            }
+        },
+        "settings-usage": { _ in
+            FeatureSwitches.shared.preview(only: [.agents, .usage])
+            SettingsOpener.open(tab: .features)
         },
         "volume": { _ in Hub.shared.show(.volume, 0.62, seconds: 10) },
         "brightness": { _ in Hub.shared.show(.brightness, 0.8, seconds: 10) },
@@ -370,6 +412,11 @@ struct Lab {
         AgentCenter.shared.preview(request, sessions: sampleSessions)
     }
 
+    static func previewUsage(side: UsageSide = .right) {
+        ClaudeUsageModule.shared.preview(ClaudeUsage(session: .init(percent: 28), week: .init(percent: 60), model: .init(percent: 79), modelName: "Fable"),
+                                         side: side)
+    }
+
     static func previewMusic() {
         let state = NowPlayingState(title: "Nachtrit", artist: "Kerf", duration: 223, elapsed: 72, isPlaying: true,
                                     sourceBundleID: "com.spotify.client")
@@ -398,8 +445,16 @@ struct Lab {
         switch job {
         case .motion(let directory): motion(controller, directory)
         case .shot(let scene, let file): shot(controller, scene, file)
+        case .hold(let scene, let seconds):
+            Task {
+                try? await Task.sleep(for: .seconds(0.4))
+                Self.scenes[scene]?(controller)
+                try? await Task.sleep(for: .seconds(seconds))
+                Self.quit(0)
+            }
         case .focus: focus(controller)
         case .workflows: checkWorkflows(controller)
+        case .bluetooth: Self.connectBluetoothDevice()
         case .menus(let pid, let file):
             let scan = MenuBarScan(front: pid, readMenus: true)
             let display = CGDisplayBounds(screen.displayID)
@@ -454,6 +509,7 @@ struct Lab {
     static func quit(_ status: Int32) -> Never {
         AudioLevels.shared.stop()
         AppMixer.shared.stopAll()
+        NotchSpace.remove()
         exit(status)
     }
 
@@ -472,6 +528,18 @@ struct Lab {
         }
         feed.resume()
         return feed
+    }
+
+    /// Not a pair of headphones, so no banner: the callback only has to survive its own queue.
+    private static func connectBluetoothDevice() {
+        nonisolated(unsafe) let watcher = IOBluetoothWatcher.shared
+        DispatchQueue(label: "nl.paulboerma.kerf.lab.bluetooth").async {
+            _ = watcher.perform(NSSelectorFromString("connected:device:"), with: IOBluetoothUserNotification(), with: IOBluetoothDevice())
+            Task { @MainActor in
+                print("PASS: a Bluetooth device connected off the main thread")
+                quit(0)
+            }
+        }
     }
 
     private func checkWorkflows(_ controller: IslandController) {

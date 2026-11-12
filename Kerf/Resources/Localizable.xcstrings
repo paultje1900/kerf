@@ -2398,6 +2398,126 @@
           }
         }
       }
+    },
+    "Claude usage" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude-verbruik"
+          }
+        }
+      }
+    },
+    "Three rings beside the notch, always there: how much is used of your 5-hour session, your week and your week of Fable. Read from your own Claude Code." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drie ringen naast de notch, altijd in beeld: hoeveel je hebt gebruikt van je sessie van 5 uur, je week en je week met Fable. Gelezen uit je eigen Claude Code."
+          }
+        }
+      }
+    },
+    "Side" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kant"
+          }
+        }
+      }
+    },
+    "Left of the notch" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Links van de notch"
+          }
+        }
+      }
+    },
+    "Right of the notch" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechts van de notch"
+          }
+        }
+      }
+    },
+    "Claude Code isn't installed. Kerf reads your usage from it." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code is niet geïnstalleerd. Kerf leest je verbruik daaruit."
+          }
+        }
+      }
+    },
+    "Claude Code has no plan limits to show. Sign it in with your Claude plan, or update it." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code heeft geen limieten om te tonen. Log in met je Claude-abonnement, of werk Claude Code bij."
+          }
+        }
+      }
+    },
+    "5-hour session" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessie van 5 uur"
+          }
+        }
+      }
+    },
+    "Week" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week"
+          }
+        }
+      }
+    },
+    "Week, %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week, %@"
+          }
+        }
+      }
+    },
+    "Week, one model" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week, één model"
+          }
+        }
+      }
+    },
+    "%lld percent used" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld procent gebruikt"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

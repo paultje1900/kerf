@@ -11,6 +11,11 @@ final class IslandManager {
     private var fullScreenObservers: [NSObjectProtocol] = []
     private var scanTask: Task<Void, Never>?
     private var occlusionObserver: NSObjectProtocol?
+    private var lockObservers: [NSObjectProtocol] = []
+    private var isLocked = false
+    private var saverRuns = false
+    /// The screen is locked or the screen saver runs: nobody sees the island.
+    var isScreenCovered: Bool { isLocked || saverRuns }
     /// The frontmost app's menu titles from the last look.
     private var menuItems: [CGRect] = []
 
@@ -36,6 +41,12 @@ final class IslandManager {
                                                                    queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.updateAudioPause() }
         }
+        // The island's own space is above the screen saver, and nothing of it belongs on a locked screen.
+        for name in [Self.locked, Self.unlocked, Self.saverStarted, Self.saverStopped] {
+            lockObservers.append(DistributedNotificationCenter.default().addObserver(forName: Notification.Name(name), object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.screenCoverChanged(name) }
+            })
+        }
         // Switching spaces or apps may enter or leave full screen; the space animation takes a moment.
         let workspace = NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.activeSpaceDidChangeNotification, NSWorkspace.didActivateApplicationNotification] {
@@ -43,6 +54,22 @@ final class IslandManager {
                 MainActor.assumeIsolated { self?.checkFullScreenSoon() }
             })
         }
+    }
+
+    private static let locked = "com.apple.screenIsLocked"
+    private static let unlocked = "com.apple.screenIsUnlocked"
+    private static let saverStarted = "com.apple.screensaver.didstart"
+    private static let saverStopped = "com.apple.screensaver.didstop"
+
+    private func screenCoverChanged(_ name: String) {
+        switch name {
+        case Self.locked: isLocked = true
+        case Self.saverStarted: saverRuns = true
+        case Self.saverStopped: saverRuns = false
+        // Unlocked: the saver is gone too, also when its own word got lost.
+        default: (isLocked, saverRuns) = (false, false)
+        }
+        controllers.values.forEach { $0.setHiddenForLock(isScreenCovered) }
     }
 
     /// The notch, and the other displays if wanted. Without any notch on screen (a Mac without
@@ -64,6 +91,7 @@ final class IslandManager {
         for screen in wantedScreens {
             let controller = IslandController(screen: screen)
             controller.apply(Hub.shared)
+            controller.setHiddenForLock(isScreenCovered)
             controller.show()
             controllers[screen.displayID] = controller
         }
@@ -99,7 +127,7 @@ final class IslandManager {
             controller.setHiddenForFullScreen(fills)
             if let range = controller.screen.notchRange {
                 let items = menuItems.filter { abs($0.minY - display.minY) < 2 } + scan.statusItems(on: display)
-                controller.island.setMenuRoom(MenuBarRoom.free(notchMinX: range.lowerBound, notchMaxX: range.upperBound, items: items))
+                controller.island.setMenuRoom(MenuBarRoom.sides(notchMinX: range.lowerBound, notchMaxX: range.upperBound, items: items))
             }
         }
         updateAudioPause()

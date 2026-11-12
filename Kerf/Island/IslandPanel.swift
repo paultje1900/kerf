@@ -12,7 +12,7 @@ final class IslandPanel: NSPanel {
         super.init(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         isFloatingPanel = true
         level = NSWindow.Level(rawValue: NSWindow.Level.mainMenu.rawValue + 3)
-        // Not .fullScreenAuxiliary: a full-screen app's space doesn't get the island.
+        // Only where `NotchSpace` isn't there: on every desktop, not in a full-screen app's space.
         collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
         backgroundColor = .clear
         isOpaque = false
@@ -20,6 +20,16 @@ final class IslandPanel: NSPanel {
         isMovable = false
         hidesOnDeactivate = false
         animationBehavior = .none
+    }
+
+    override func orderFrontRegardless() {
+        super.orderFrontRegardless()
+        NotchSpace.keep(self)
+    }
+
+    override func makeKeyAndOrderFront(_ sender: Any?) {
+        super.makeKeyAndOrderFront(sender)
+        NotchSpace.keep(self)
     }
 
     override var canBecomeKey: Bool { acceptsKeyboard || wantsKeyboard() }

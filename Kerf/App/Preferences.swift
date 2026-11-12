@@ -11,6 +11,8 @@ enum Preferences {
     /// On: the open island becomes small again when the pointer leaves it. Off: it stays until
     /// Escape, a click on the notch, or ⌥ Space.
     static let closesOnLeave = "closesOnLeave"
+    /// "left" or "right": the side of the notch the Claude usage rings sit on.
+    static let usageSide = "usage.side"
 
     static func register() {
         UserDefaults.standard.register(defaults: [
