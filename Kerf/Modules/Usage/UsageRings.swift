@@ -25,16 +25,19 @@ struct UsageStrip: Equatable {
     var width: CGFloat { CGFloat(count) * Self.ring + CGFloat(max(count - 1, 0)) * Self.gap + 16 }
 }
 
-/// 5 hours, week, model: always in that order and each in its own colour, with how much of it is
-/// used. Not orange, green or red: in the island those say waiting, done and failed.
+/// 5 hours, week, model: always in that order, from orange to yellow, with how much of it is used.
+/// The yellow one ends up beside the right wing, where the orange dot waits.
 struct UsageRings: View {
+    /// Halfway between the system's orange and yellow.
+    private static let amber = Color(.sRGB, red: 1, green: 0.73, blue: 0.04)
+
     var body: some View {
         let usage = ClaudeUsageModule.shared.usage
         HStack(spacing: UsageStrip.gap) {
-            if let session = usage?.session { UsageRing(limit: session, tint: Color(nsColor: .systemPink), name: Text("5-hour session")) }
-            if let week = usage?.week { UsageRing(limit: week, tint: Color(nsColor: .systemCyan), name: Text("Week")) }
+            if let session = usage?.session { UsageRing(limit: session, tint: Color(nsColor: .systemOrange), name: Text("5-hour session")) }
+            if let week = usage?.week { UsageRing(limit: week, tint: Self.amber, name: Text("Week")) }
             if let model = usage?.model {
-                UsageRing(limit: model, tint: Color(nsColor: .systemPurple),
+                UsageRing(limit: model, tint: Color(nsColor: .systemYellow),
                           name: usage?.modelName.map { Text("Week, \($0)") } ?? Text("Week, one model"))
             }
         }
