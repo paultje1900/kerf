@@ -1,0 +1,84 @@
+# A pull request that changes the app comes with a note in WhatsNew/ (see CLAUDE.md): without
+# one, nobody hears of the change and Kerf doesn't offer it as an update. Not needed for a
+# change nobody notices: tick that box in the pull request, or label it "no patch note".
+name: Patch note
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  note:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the notes in WhatsNew/
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          BODY: ${{ github.event.pull_request.body }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, '|') }}
+        run: |
+          python3 - <<'PY'
+          import base64, json, os, re, sys, urllib.request
+
+          def get(url):
+              request = urllib.request.Request(url, headers={
+                  "Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                  "Accept": "application/vnd.github+json",
+              })
+              with urllib.request.urlopen(request) as response:
+                  return json.load(response)
+
+          files, page = [], 1
+          while True:
+              batch = get(f"https://api.github.com/repos/{os.environ['REPO']}/pulls/{os.environ['PR']}/files?per_page=100&page={page}")
+              files += batch
+              if len(batch) < 100:
+                  break
+              page += 1
+
+          # The app and its logic; the lab only checks the island.
+          def changes_app(path):
+              return (path.startswith("Kerf/") or path.startswith("KerfKit/Sources/")) and path != "Kerf/Island/Lab.swift"
+
+          problems = []
+          notes = [f for f in files if f["filename"].startswith("WhatsNew/") and f["filename"].endswith(".json") and f["status"] != "removed"]
+          for f in notes:
+              path = f["filename"]
+              if not re.fullmatch(r"WhatsNew/\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.json", path):
+                  problems.append(f"{path}: name it WhatsNew/<yyyy-mm-dd>-<a-few-words>.json, lowercase, digits and dashes.")
+                  continue
+              try:
+                  note = json.loads(base64.b64decode(get(f["contents_url"])["content"]))
+              except Exception as error:
+                  problems.append(f"{path}: not valid JSON ({error}).")
+                  continue
+              for field in ("title", "text"):
+                  for language in ("en", "nl"):
+                      value = (note.get(field) or {}).get(language) if isinstance(note.get(field), dict) else None
+                      if not isinstance(value, str) or not value.strip():
+                          problems.append(f'{path}: "{field}" needs "{language}".')
+              if not isinstance(note.get("by"), str) or not note["by"].strip():
+                  problems.append(f'{path}: "by" needs your GitHub login.')
+
+          app = [f["filename"] for f in files if changes_app(f["filename"])]
+          skipped = "no patch note" in os.environ.get("LABELS", "").split("|") \
+              or re.search(r"- \[[xX]\] Nobody using Kerf notices", os.environ.get("BODY") or "")
+          if app and not notes and not skipped:
+              problems.append(
+                  "This pull request changes the app but adds no note in WhatsNew/. Add one "
+                  "(https://github.com/paultje1900/kerf/blob/main/WhatsNew/README.md), or, when nobody "
+                  "using Kerf notices the change, tick that box in the pull request."
+              )
+
+          for problem in problems:
+              print(f"::error::{problem}")
+          if problems:
+              sys.exit(1)
+          print(f"{len(notes)} note(s)" if notes else "No note needed" if not app else "No note: ticked as unnoticed")
+          PY

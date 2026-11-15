@@ -1,0 +1,12 @@
+{
+  "title": {
+    "en": "Claude usage",
+    "nl": "Claude-verbruik"
+  },
+  "text": {
+    "en": "Switch it on in Settings → Features: two rings in the open island show how much of your 5-hour session and your week is used.",
+    "nl": "Zet het aan in Instellingen → Functies: twee ringen in het open eiland laten zien hoeveel van je sessie van 5 uur en je week op is."
+  },
+  "symbol": "gauge.with.dots.needle.33percent",
+  "by": "paultje1900"
+}

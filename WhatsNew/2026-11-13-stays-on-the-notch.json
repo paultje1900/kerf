@@ -1,0 +1,12 @@
+{
+  "title": {
+    "en": "The island stays on the notch",
+    "nl": "Het eiland blijft op de notch"
+  },
+  "text": {
+    "en": "Switching desktops no longer slides the island away from the notch. It also hides on the lock screen and under the screen saver.",
+    "nl": "Wisselen van bureaublad schuift het eiland niet meer weg van de notch. Op het toegangsscherm en onder de schermbeveiliging verdwijnt het."
+  },
+  "symbol": "menubar.rectangle",
+  "by": "paultje1900"
+}

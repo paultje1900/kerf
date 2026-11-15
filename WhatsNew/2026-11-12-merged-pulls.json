@@ -1,0 +1,12 @@
+{
+  "title": {
+    "en": "Your merged pull requests",
+    "nl": "Je gemergede pull requests"
+  },
+  "text": {
+    "en": "With GitHub on, your pull requests merged in the last eight hours stay in the list, with a purple merge icon. A new merge shows in the notch until you look.",
+    "nl": "Met GitHub aan blijven je pull requests van de afgelopen acht uur in de lijst staan, met een paars merge-icoon. Een nieuwe merge staat in de notch tot je kijkt."
+  },
+  "symbol": "arrow.triangle.merge",
+  "by": "JJWindt"
+}

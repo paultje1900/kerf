@@ -2478,6 +2478,296 @@
           }
         }
       }
+    },
+    "What's New in Kerf" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat is er nieuw in Kerf"
+          }
+        }
+      }
+    },
+    "What's New in Kerf…" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat is er nieuw in Kerf…"
+          }
+        }
+      }
+    },
+    "Check for Updates…" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek naar updates…"
+          }
+        }
+      }
+    },
+    "Checking for Updates…" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoeken naar updates…"
+          }
+        }
+      }
+    },
+    "Kerf Is Up to Date" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kerf is bijgewerkt"
+          }
+        }
+      }
+    },
+    "A New Kerf Is Ready" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er staat een nieuwe Kerf klaar"
+          }
+        }
+      }
+    },
+    "Updating Kerf…" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kerf wordt bijgewerkt…"
+          }
+        }
+      }
+    },
+    "Kerf Couldn't Update" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kerf kon niet bijwerken"
+          }
+        }
+      }
+    },
+    "Kerf %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kerf %@"
+          }
+        }
+      }
+    },
+    "You have the newest version from %@." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hebt de nieuwste versie uit %@."
+          }
+        }
+      }
+    },
+    "Update builds it from %@ and restarts Kerf. That takes a minute or two." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werk bij bouwt hem uit %@ en start Kerf opnieuw. Dat duurt een minuut of twee."
+          }
+        }
+      }
+    },
+    "Building the new Kerf. It restarts by itself when it's done." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De nieuwe Kerf wordt gebouwd. Hij start vanzelf opnieuw als hij klaar is."
+          }
+        }
+      }
+    },
+    "Kerf couldn't reach GitHub. Check your connection and try again." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kerf kon GitHub niet bereiken. Controleer je verbinding en probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "Your copy in %@ is on the branch %@. Switch to main, or update it yourself with git pull and scripts/install.sh." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kopie in %1$@ staat op de branch %2$@. Ga terug naar main, of werk hem zelf bij met git pull en scripts/install.sh."
+          }
+        }
+      }
+    },
+    "Your copy in %@ has changes of its own. Commit or stash them, or update it yourself with git pull and scripts/install.sh." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kopie in %@ heeft eigen wijzigingen. Commit of stash ze, of werk hem zelf bij met git pull en scripts/install.sh."
+          }
+        }
+      }
+    },
+    "git pull didn't work in %@. Update it yourself with git pull and scripts/install.sh." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "git pull lukte niet in %@. Werk Kerf zelf bij met git pull en scripts/install.sh."
+          }
+        }
+      }
+    },
+    "The new Kerf didn't build. The log says why." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De nieuwe Kerf kon niet gebouwd worden. Het logboek zegt waarom."
+          }
+        }
+      }
+    },
+    "Later" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Later"
+          }
+        }
+      }
+    },
+    "Update" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werk bij"
+          }
+        }
+      }
+    },
+    "Show Log" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon logboek"
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ga door"
+          }
+        }
+      }
+    },
+    "By %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Door %@"
+          }
+        }
+      }
+    },
+    "Updates" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates"
+          }
+        }
+      }
+    },
+    "What's New…" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat is er nieuw…"
+          }
+        }
+      }
+    },
+    "Check Now" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek nu"
+          }
+        }
+      }
+    },
+    "A new version is ready." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er staat een nieuwe versie klaar."
+          }
+        }
+      }
+    },
+    "This copy wasn't installed with scripts/install.sh. Update it the way you installed it." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze kopie is niet met scripts/install.sh geïnstalleerd. Werk hem bij zoals je hem installeerde."
+          }
+        }
+      }
+    },
+    "Check for updates" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek naar updates"
+          }
+        }
+      }
+    },
+    "A few times a day Kerf asks git whether %@, the folder you installed it from, has a newer version on GitHub." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een paar keer per dag vraagt Kerf aan git of %@, de map waaruit je hem installeerde, een nieuwere versie op GitHub heeft."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

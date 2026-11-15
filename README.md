@@ -32,7 +32,7 @@ scripts/install.sh DEVELOPMENT_TEAM=<your team ID>
 
 Needs macOS 26 (Tahoe) and Xcode 27. The script makes a Release build, signed with your own team (a free Apple ID works), puts it in /Applications and starts it. Kerf opens at login and lives in the notch; on a display without a notch it floats at the top.
 
-Update with `git pull` and the same `scripts/install.sh`. To remove it, first press Disconnect in Settings → Agents, then move Kerf from Applications to the Trash.
+Kerf tells you when a new version is ready and what's in it. Click Update and it pulls and builds the new one for you, then shows what's new and who made it. By hand: `git pull` and the same `scripts/install.sh`. To remove it, first press Disconnect in Settings → Agents, then move Kerf from Applications to the Trash.
 
 ## First steps
 
@@ -48,6 +48,8 @@ Kerf has no server and no account. Everything stays on your Mac, except, once yo
 - what you ask Claude and your plan's usage go through your own Claude Code, and GitHub through your own `gh`;
 - a search opens Google in your browser.
 
+To look for updates, git fetches this repository from GitHub a few times a day, in the folder you installed Kerf from. Switch it off in Settings → General.
+
 ## Build from source
 
 ```bash
@@ -57,6 +59,8 @@ scripts/install.sh   # Release build into /Applications
 ```
 
 macOS 26, Xcode 27, Swift 6. `Kerf --lab shot <scene> <file.png>` saves a frame of any state without real data (scenes in `Kerf/Island/Lab.swift`).
+
+Every pull request that changes what people see adds a note in [`WhatsNew/`](WhatsNew/README.md): that's how everyone learns what's new, and what makes Kerf offer the update.
 
 Releases: raise `MARKETING_VERSION`, then `scripts/release.sh --publish` archives, signs with Developer ID, notarizes and publishes the GitHub release.
 

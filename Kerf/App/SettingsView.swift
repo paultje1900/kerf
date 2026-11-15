@@ -98,8 +98,43 @@ struct GeneralSettings: View {
             if Feature.ask.isOn {
                 LabeledContent("Ask Claude about the selection", value: "⌥⇧ Space")
             }
+            UpdateSettings()
         }
         .formStyle(.grouped)
+    }
+}
+
+/// The version, what's new in it, and where updates come from.
+struct UpdateSettings: View {
+    @AppStorage(Preferences.checksForUpdates) private var checksForUpdates = true
+    private let updater = Updater.shared
+
+    var body: some View {
+        Section("Updates") {
+            LabeledContent {
+                HStack {
+                    Button("What's New…") { WhatsNewWindow.show(.all, activate: true) }
+                    if case .available = updater.state {
+                        Button("Update…") { WhatsNewWindow.show(.update, activate: true) }
+                    } else if updater.source != nil {
+                        Button("Check Now") { updater.check(manual: true) }
+                    }
+                }
+            } label: {
+                Text("Kerf \(WhatsNew.version)")
+                if case .available = updater.state {
+                    Text("A new version is ready.")
+                } else if updater.source == nil {
+                    Text("This copy wasn't installed with scripts/install.sh. Update it the way you installed it.")
+                }
+            }
+            if updater.source != nil {
+                Toggle(isOn: $checksForUpdates) {
+                    Text("Check for updates")
+                    Text("A few times a day Kerf asks git whether \(updater.sourcePath), the folder you installed it from, has a newer version on GitHub.")
+                }
+            }
+        }
     }
 }
 

@@ -58,5 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         LoginItem.registerOnFirstLaunch()
         // A fresh install has nothing to show until an agent is connected: say where.
         if firstLaunch, !HookTarget.allCases.contains(where: \.isInstalled) { SettingsOpener.open(tab: .agents) }
+        WhatsNew.showAtLaunch(firstLaunch: firstLaunch)
+        Updater.shared.start()
     }
 }

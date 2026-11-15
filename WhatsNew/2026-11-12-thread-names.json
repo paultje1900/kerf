@@ -1,0 +1,12 @@
+{
+  "title": {
+    "en": "Threads by their own name",
+    "nl": "Gesprekken met hun eigen naam"
+  },
+  "text": {
+    "en": "A thread shows the short name Claude Code gives it, or yours after a rename, instead of the first thing you asked.",
+    "nl": "Een gesprek heeft de korte naam die Claude Code het geeft, of die van jou na een hernoeming, in plaats van je eerste vraag."
+  },
+  "symbol": "text.bubble",
+  "by": "JJWindt"
+}

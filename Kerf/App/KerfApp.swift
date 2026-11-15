@@ -22,6 +22,10 @@ struct MenuBarMenu: View {
             openSettings()
         }
         .keyboardShortcut(",")
+        Button("What's New in Kerf…") { WhatsNewWindow.show(.all, activate: true) }
+        if Updater.shared.source != nil {
+            Button("Check for Updates…") { Updater.shared.check(manual: true) }
+        }
         Divider()
         Button("Quit Kerf") { NSApp.terminate(nil) }
             .keyboardShortcut("q")

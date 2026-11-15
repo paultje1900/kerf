@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict/>
+<dict>
+	<!-- The clone scripts/install.sh built this copy from, and the team it signed with: where
+	     Kerf looks for updates and how it builds one. Empty in other builds. -->
+	<key>KerfSource</key>
+	<string>$(KERF_SOURCE)</string>
+	<key>KerfTeam</key>
+	<string>$(DEVELOPMENT_TEAM)</string>
+</dict>
 </plist>

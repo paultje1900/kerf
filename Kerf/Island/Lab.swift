@@ -17,6 +17,10 @@ import SwiftUI
 ///                                     does: Kerf 0.1.0 quit there
 ///     Kerf --lab hold <scene> <seconds>
 ///                                     keeps a scene on screen, to look at it while you switch desktops
+///     Kerf --lab updates <clone> [update]
+///                                     looks for an update in a clone as an installed Kerf does; with
+///                                     `update` it also pulls and runs that clone's scripts/install.sh,
+///                                     so point it at a test clone
 struct Lab {
     enum Job {
         case motion(URL)
@@ -29,6 +33,7 @@ struct Lab {
         /// Writes an app's menu titles and the room they leave beside the notch to a file.
         case menus(pid: pid_t, file: URL)
         case levels(seconds: Double, tap: Bool, synth: Bool)
+        case updates(URL, update: Bool)
     }
 
     let job: Job
@@ -54,6 +59,7 @@ struct Lab {
         case "hold" where arguments.count > index + 3: job = .hold(arguments[index + 2], Double(arguments[index + 3]) ?? 10)
         case "menus" where arguments.count > index + 3:
             job = .menus(pid: pid_t(arguments[index + 2]) ?? 0, file: URL(fileURLWithPath: arguments[index + 3]))
+        case "updates": job = .updates(URL(fileURLWithPath: arguments[index + 2]), update: arguments.dropFirst(index + 3).contains("update"))
         case "levels":
             let options = arguments.dropFirst(index + 3)
             job = .levels(seconds: Double(arguments[index + 2]) ?? 20, tap: options.contains("tap"), synth: options.contains("synth"))
@@ -130,6 +136,30 @@ struct Lab {
         "settings-usage": { _ in
             FeatureSwitches.shared.preview(only: [.agents, .usage])
             SettingsOpener.open(tab: .features)
+        },
+        // `window-` scenes save the What's New window.
+        "window-whatsnew": { _ in WhatsNewWindow.show(.notes(WhatsNew.notes)) },
+        "window-update": { _ in previewUpdate(.available(Array(WhatsNew.notes.prefix(2)))) },
+        "window-updating": { _ in previewUpdate(.updating) },
+        "window-update-changes": { _ in previewUpdate(.failed(.changes)) },
+        "window-update-build": { _ in previewUpdate(.failed(.build)) },
+        "window-uptodate": { _ in previewUpdate(.upToDate) },
+        "settings-updates": { _ in
+            Updater.shared.preview(.available(Array(WhatsNew.notes.prefix(2))), source: URL(fileURLWithPath: NSHomeDirectory() + "/GitHub/kerf"))
+            SettingsOpener.open(tab: .general)
+            // Updates is at the bottom of the form.
+            Task {
+                try? await Task.sleep(for: .seconds(1))
+                for window in NSApp.windows where window.isVisible {
+                    var views = [window.contentView].compactMap { $0 }
+                    while let view = views.popLast() {
+                        if let scroll = view as? NSScrollView, let document = scroll.documentView {
+                            document.scroll(NSPoint(x: 0, y: document.isFlipped ? document.bounds.maxY : 0))
+                        }
+                        views += view.subviews
+                    }
+                }
+            }
         },
         "volume": { _ in Hub.shared.show(.volume, 0.62, seconds: 10) },
         "brightness": { _ in Hub.shared.show(.brightness, 0.8, seconds: 10) },
@@ -442,6 +472,7 @@ struct Lab {
         case .focus: focus(controller)
         case .workflows: checkWorkflows(controller)
         case .bluetooth: Self.connectBluetoothDevice()
+        case .updates(let folder, let update): checkUpdates(folder, update: update)
         case .menus(let pid, let file):
             let scan = MenuBarScan(front: pid, readMenus: true)
             let display = CGDisplayBounds(screen.displayID)
@@ -613,6 +644,31 @@ struct Lab {
         Self.quit(0)
     }
 
+    private static func previewUpdate(_ state: Updater.State) {
+        Updater.shared.preview(state, source: URL(fileURLWithPath: NSHomeDirectory() + "/GitHub/kerf"))
+        WhatsNewWindow.show(.update)
+    }
+
+    private func checkUpdates(_ folder: URL, update: Bool) {
+        let updater = Updater.shared
+        updater.preview(.idle, source: folder)
+        Task {
+            let installed = Set(WhatsNew.notes.map(\.id))
+            let notes = await Updater.newNotes(in: folder, installed: installed)
+            print("installed \(installed.sorted())")
+            print("new \(notes.map { $0.map(\.id) } ?? ["git couldn't reach it"])")
+            guard update, let notes, !notes.isEmpty else { Self.quit(0) }
+            updater.preview(.available(notes))
+            updater.update()
+            for _ in 0..<600 {
+                try? await Task.sleep(for: .seconds(0.5))
+                if updater.state != .updating { break }
+            }
+            print("state \(updater.state)")
+            Self.quit(0)
+        }
+    }
+
     private func focus(_ controller: IslandController) {
         func log(_ step: String) {
             let panel = controller.panel
@@ -647,7 +703,7 @@ struct Lab {
             }
             // Scenes with real data (gh) need longer.
             try? await Task.sleep(for: .seconds(scene.hasPrefix("github") ? 8 : 1.6))
-            let window = scene.hasPrefix("settings-")
+            let window = scene.hasPrefix("settings-") || scene.hasPrefix("window-")
                 ? NSApp.windows.first { $0 !== controller.panel && $0.isVisible && $0.styleMask.contains(.titled) } : controller.panel
             if let window, let image = FrameRecorder.snapshot(of: window) { writePNG(image, to: file) }
             Self.quit(0)

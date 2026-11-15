@@ -11,6 +11,12 @@ enum Preferences {
     /// On: the open island becomes small again when the pointer leaves it. Off: it stays until
     /// Escape, a click on the notch, or ⌥ Space.
     static let closesOnLeave = "closesOnLeave"
+    /// The patch notes you've seen, by file name.
+    static let seenNotes = "whatsNew.seen"
+    /// Off: Kerf never runs git to look for a newer version.
+    static let checksForUpdates = "checksForUpdates"
+    /// When Update started the build, so the new Kerf can say it's done.
+    static let updateStarted = "update.started"
 
     static func register() {
         UserDefaults.standard.register(defaults: [
@@ -18,6 +24,7 @@ enum Preferences {
             hoverOpenDelay: 0.25,
             playsSounds: true,
             closesOnLeave: true,
+            checksForUpdates: true,
         ])
     }
 }

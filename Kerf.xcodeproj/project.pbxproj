@@ -72,6 +72,7 @@
 				B00000000000000000000130 /* Frameworks */,
 				B00000000000000000000141 /* Resources */,
 				B00000000000000000000142 /* Build MediaRemote adapter */,
+				B00000000000000000000143 /* Bundle What's New */,
 			);
 			buildRules = (
 			);
@@ -153,6 +154,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"$SRCROOT/scripts/build-adapter.sh\"\n";
+		};
+		B00000000000000000000143 /* Bundle What's New */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle What's New";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/scripts/bundle-whats-new.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
