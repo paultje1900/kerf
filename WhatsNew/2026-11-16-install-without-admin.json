@@ -1,0 +1,12 @@
+{
+  "title": {
+    "en": "Install without admin rights",
+    "nl": "Installeren zonder beheerdersrechten"
+  },
+  "text": {
+    "en": "scripts/install.sh now works on a Mac where you aren't an admin, or without a developer certificate: Kerf goes in ~/Applications, opens at login and still updates itself.",
+    "nl": "scripts/install.sh werkt nu ook op een Mac waar je geen beheerder bent, of zonder ontwikkelaarscertificaat: Kerf komt in ~/Applications, opent bij inloggen en werkt zichzelf nog steeds bij."
+  },
+  "symbol": "person.badge.key",
+  "by": "JJWindt"
+}

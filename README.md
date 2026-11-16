@@ -30,7 +30,7 @@ cd kerf
 scripts/install.sh DEVELOPMENT_TEAM=<your team ID>
 ```
 
-Needs macOS 26 (Tahoe) and Xcode 27. The script makes a Release build, signed with your own team (a free Apple ID works), puts it in /Applications and starts it. Kerf opens at login and lives in the notch; on a display without a notch it floats at the top.
+Needs macOS 26 (Tahoe) and Xcode 27. The script makes a Release build, signed with your own team (a free Apple ID works), puts it in /Applications and starts it. Without admin rights it goes in ~/Applications instead, and without an Apple Development certificate (leave out `DEVELOPMENT_TEAM`) it is signed ad hoc, which runs on your own Mac; macOS then asks for Accessibility again after each update. Kerf opens at login and lives in the notch; on a display without a notch it floats at the top.
 
 Kerf tells you when a new version is ready and what's in it. Click Update and it pulls and builds the new one for you, then shows what's new and who made it. By hand: `git pull` and the same `scripts/install.sh`. To remove it, first press Disconnect in Settings → Agents, then move Kerf from Applications to the Trash.
 
@@ -55,7 +55,7 @@ To look for updates, git fetches this repository from GitHub a few times a day, 
 ```bash
 xcodebuild -project Kerf.xcodeproj -scheme Kerf build
 cd KerfKit && swift test
-scripts/install.sh   # Release build into /Applications
+scripts/install.sh   # Release build into /Applications (or ~/Applications)
 ```
 
 macOS 26, Xcode 27, Swift 6. `Kerf --lab shot <scene> <file.png>` saves a frame of any state without real data (scenes in `Kerf/Island/Lab.swift`).

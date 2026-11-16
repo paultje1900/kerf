@@ -34,6 +34,6 @@ Other people build Kerf too, so everyone sees what's new: after an update Kerf s
 ```bash
 xcodebuild -project Kerf.xcodeproj -scheme Kerf -configuration Debug build
 cd KerfKit && swift test
-scripts/install.sh             # Release build into /Applications; it remembers this clone for updates
+scripts/install.sh             # Release build into /Applications (or ~/Applications); it remembers this clone for updates
 scripts/release.sh --publish   # after raising MARKETING_VERSION
 ```

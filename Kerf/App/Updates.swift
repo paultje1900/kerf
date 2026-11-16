@@ -68,10 +68,10 @@ final class Updater {
 
     private(set) var state = State.idle
     /// The clone this copy was built from; nil when it wasn't built by `scripts/install.sh` into
-    /// /Applications, or the clone is gone.
+    /// /Applications (or ~/Applications), or the clone is gone.
     private(set) var source: URL? = {
         let path = Bundle.main.object(forInfoDictionaryKey: "KerfSource") as? String ?? ""
-        guard !path.isEmpty, Bundle.main.bundlePath == "/Applications/Kerf.app",
+        guard !path.isEmpty, LoginItem.isInstalled,
               FileManager.default.fileExists(atPath: path + "/scripts/install.sh"),
               FileManager.default.fileExists(atPath: path + "/.git") else { return nil }
         return URL(fileURLWithPath: path)
