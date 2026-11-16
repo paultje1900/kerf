@@ -481,7 +481,8 @@ struct Lab {
             lines += scan.statusItems(on: display).map { "status \(Int($0.minX))...\(Int($0.maxX))" }
             lines += scan.windows.filter { $0.pid == pid && $0.layer == 0 }.map { window in
                 let hides = WindowVisibility.hidesIsland(window: window.bounds, display: display, notch: screen.safeAreaInsets.top,
-                                                         isFullScreen: window.isFullScreen, dockShown: scan.dockFrames.contains { $0.intersects(display) })
+                                                         isFullScreen: window.isFullScreen, dockShown: scan.dockFrames.contains { $0.intersects(display) },
+                                                         menuBarShown: !scan.statusItems(on: display).isEmpty)
                 return "window \(window.bounds) fullScreen \(window.isFullScreen.map(String.init) ?? "unknown") hidesIsland \(hides)"
             }
             if let range = screen.notchRange {

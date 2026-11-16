@@ -1,0 +1,12 @@
+{
+  "title": {
+    "en": "Stays over maximized windows",
+    "nl": "Blijft boven gemaximaliseerde vensters"
+  },
+  "text": {
+    "en": "With the Dock set to hide, a maximized window no longer hides the island as if it were full screen.",
+    "nl": "Met een Dock dat zich verbergt, verbergt een gemaximaliseerd venster de island niet meer alsof het schermvullend is."
+  },
+  "symbol": "macwindow",
+  "by": "JJWindt"
+}

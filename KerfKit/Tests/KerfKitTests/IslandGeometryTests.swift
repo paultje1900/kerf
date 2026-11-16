@@ -92,6 +92,15 @@ struct MenuBarRoomTests {
             #expect(!WindowVisibility.hidesIsland(window: fullScreen, display: display, notch: 32, isFullScreen: nil, dockShown: true))
         }
 
+        @Test func maximizedWithAHiddenDockKeepsTheIsland() {
+            // The Dock hides itself, but the menu bar's status items are still there.
+            let maximized = CGRect(x: 0, y: 33, width: 1512, height: 949)
+            #expect(!WindowVisibility.hidesIsland(window: maximized, display: display, notch: 33, isFullScreen: nil,
+                                                  dockShown: false, menuBarShown: true))
+            #expect(WindowVisibility.hidesIsland(window: maximized, display: display, notch: 33, isFullScreen: nil,
+                                                 dockShown: false, menuBarShown: false))
+        }
+
         @Test func fallbackRequiresTheWholeDisplay() {
             #expect(WindowVisibility.hidesIsland(window: display, display: display, isFullScreen: nil))
             #expect(!WindowVisibility.hidesIsland(window: display, display: display, isFullScreen: false))

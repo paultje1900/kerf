@@ -120,9 +120,11 @@ final class IslandManager {
         for controller in controllers.values {
             let display = CGDisplayBounds(controller.screen.displayID)
             let dockShown = scan.dockFrames.contains { $0.intersects(display) }
+            let menuBarShown = !scan.statusItems(on: display).isEmpty
             let fills = windows.contains { window in
                 WindowVisibility.hidesIsland(window: window.bounds, display: display, notch: controller.screen.safeAreaInsets.top,
-                                             isFullScreen: window.isFullScreen, dockShown: dockShown)
+                                             isFullScreen: window.isFullScreen, dockShown: dockShown,
+                                             menuBarShown: menuBarShown)
             }
             controller.setHiddenForFullScreen(fills)
             if let range = controller.screen.notchRange {
